@@ -1,9 +1,7 @@
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.future import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db import get_session, init_db
+from app.db import get_session, DB_USER, DB_PASS
 from app.models import Document, Category, DocumentCategory
 from app.functions import api_key_auth
 
@@ -20,6 +18,6 @@ app.add_middleware(
 )
 
 
-@app.get("/ping", dependencies=[Depends(api_key_auth)])
+@app.get("/api/ping", dependencies=[Depends(api_key_auth)])
 async def pong():
     return {"ping": "pong!"}

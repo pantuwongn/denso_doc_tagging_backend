@@ -11,5 +11,9 @@ services:
       - ./fastapi_app/:/code/
       - ./fastapi_app/requirements.txt:/code/requirements.txt
     environment:
-      - DATABASE_URL=postgresql+asyncpg://doc_tagging:gniggat_cod@128.199.243.160:5432/doctag
+      - DB_USER=doc_tagging
+      - DB_PASS=gniggat_cod
+      - DB_HOST=128.199.243.160
+      - DB_PORT=5432
+      - DB_NAME=doctag
       - API_KEY=akljnv13bvi2vfo0b0bw
