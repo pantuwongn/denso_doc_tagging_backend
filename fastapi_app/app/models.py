@@ -1,17 +1,30 @@
 from sqlmodel import SQLModel, Field
 
 
-class Document(SQLModel, table=True):
-    id: int = Field(default=None, primary_key=True)
+class DocumentBase(SQLModel):
     name: str
+
+
+class Document(DocumentBase, table=True):
+    id: int = Field(default=None, primary_key=True)
     type: str
     path: str
 
+class DocumentCreate(DocumentBase):
+    pass
 
-class Category(SQLModel, table=True):
-    id: int = Field(default=None, primary_key=True)
+
+class CategoryBase(SQLModel):
     name: str
     enable: bool
+
+
+class Category(CategoryBase, table=True):
+    id: int = Field(default=None, primary_key=True)
+
+
+class CategoryCreate(CategoryBase):
+    pass
 
 
 class DocumentCategory(SQLModel, table=True):

@@ -1,4 +1,6 @@
 import os
+import string
+import random
 from fastapi.security import APIKeyHeader
 from fastapi import HTTPException, Depends
 
@@ -15,3 +17,8 @@ def api_key_auth(x_api_key: str = Depends(X_API_KEY)):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Forbidden"
         )
+
+
+def random_text() -> str:
+    letters = string.ascii_lowercase
+    return ''.join(random.choice(letters) for i in range(5))
