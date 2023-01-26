@@ -6,3 +6,4 @@ sqlalchemy
 uvicorn
 python-multipart
 starlette_validation_uploadfile
+aiofiles

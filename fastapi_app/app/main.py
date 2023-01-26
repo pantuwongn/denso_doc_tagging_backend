@@ -1,4 +1,5 @@
 import os
+import aiofiles
 from fastapi import Depends, FastAPI, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -30,12 +31,18 @@ async def upload_doc(file: UploadFile, session: AsyncSession = Depends(get_sessi
     content_type = file.content_type
     if content_type != "application/pdf":
         raise HTTPException(status_code=400, detail="Accept only PDF file!")
-    elif len(await file.read()) > (1024 * 1024 * 50):
+
+    content = await file.read()
+    if len(content) > (1024 * 1024 * 50):
         raise HTTPException(status_code=413, detail="File is too large!")
-    else:
-        filename_sp = os.path.splitext(file.filename)
-        base_name = filename_sp[0]
-        extension = filename_sp[1]
-        filename = f"{base_name}_{random_text()}.{extension}"
-        filename = filename.replace(" ", "_")
-        return {"file_type": content_type, "file_name": filename}
+
+    filename_sp = os.path.splitext(file.filename)
+    base_name = filename_sp[0]
+    extension = filename_sp[1]
+    filename = f"{base_name}_{random_text()}{extension}"
+    filename = filename.replace(" ", "_")
+    print(os.getcwd())
+    filepath = os.path.join('app', 'uploads', filename)
+    async with aiofiles.open(filepath, 'wb') as out_file:
+        await out_file.write(content)
+    return {"file_type": content_type, "file_name": filename}
