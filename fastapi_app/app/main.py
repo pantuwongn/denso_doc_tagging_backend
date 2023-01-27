@@ -41,7 +41,6 @@ async def upload_doc(file: UploadFile, session: AsyncSession = Depends(get_sessi
     extension = filename_sp[1]
     filename = f"{base_name}_{random_text()}{extension}"
     filename = filename.replace(" ", "_")
-    print(os.getcwd())
     filepath = os.path.join('app', 'uploads', filename)
     async with aiofiles.open(filepath, 'wb') as out_file:
         await out_file.write(content)
