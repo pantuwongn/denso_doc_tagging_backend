@@ -39,7 +39,8 @@ class DocumentCreate(DocumentBase):
     categories: List[DocumentCategoryBase]
 
 
-class DocumentRead(Document):
+class DocumentRead(DocumentBase):
+    id: int
     categories: List[DocumentCategoryBase]
 
 
