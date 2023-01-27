@@ -172,7 +172,7 @@ async def query_doc(query_list: List[DocumentQuery], session: AsyncSession = Dep
     return returnList
 
 
-@app.get("/api/get_category_list", dependencies=[Depends(api_key_auth)], response_model=List(Category))
+@app.get("/api/get_category_list", dependencies=[Depends(api_key_auth)], response_model=List[Category])
 async def get_category_list(session: AsyncSession = Depends(get_session)):
     statement = select(Category)
     results = await session.exec(statement)
