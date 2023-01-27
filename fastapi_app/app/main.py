@@ -1,6 +1,8 @@
 import os
 import aiofiles
+import magic
 from fastapi import Depends, FastAPI, UploadFile, HTTPException
+from starlette.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -26,8 +28,8 @@ async def pong():
     return {"ping": "pong!"}
 
 
-@app.post("/api/upload_doc", dependencies=[Depends(api_key_auth)]) #, response_model=Document)
-async def upload_doc(file: UploadFile, session: AsyncSession = Depends(get_session)):
+@app.post("/api/upload_doc", dependencies=[Depends(api_key_auth)])
+async def upload_doc(file: UploadFile):
     content_type = file.content_type
     if content_type != "application/pdf":
         raise HTTPException(status_code=400, detail="Accept only PDF file!")
@@ -45,3 +47,14 @@ async def upload_doc(file: UploadFile, session: AsyncSession = Depends(get_sessi
     async with aiofiles.open(filepath, 'wb') as out_file:
         await out_file.write(content)
     return {"file_type": content_type, "file_name": filename}
+
+
+@app.get("/api/download_doc/{file_name}", dependencies=[Depends(api_key_auth)])
+async def download_doc(file_name: str):
+    filepath = os.path.join('app', 'uploads', file_name)
+    if not os.path.isfile(filepath):
+        raise HTTPException(status_code=404, detail="File is not exist!!")
+    else:
+        mime = magic.Magic(mime=True)
+        content_type = mime.from_file(filepath)
+        return FileResponse(path=filepath, filename=file_name, media_type=content_type)

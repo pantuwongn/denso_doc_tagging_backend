@@ -6,8 +6,11 @@ ENV PYTHONUNBUFFERED 1
 COPY . /code
 WORKDIR /code
 
-RUN pip install -r requirements.txt
-RUN alembic upgrade head
+RUN apt update && \ 
+    apt -y upgrade && \ 
+    apt install -y libmagic1 && \ 
+    pip install -r requirements.txt && \
+    alembic upgrade head
 
 EXPOSE 8888
 
