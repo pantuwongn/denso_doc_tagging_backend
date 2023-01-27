@@ -5,9 +5,12 @@ from fastapi import Depends, FastAPI, UploadFile, HTTPException
 from starlette.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import select
+from typing import List
 
 from app.db import get_session
-from app.models import Document, DocumentCreate, Category, DocumentCategory
+from app.models import Document, DocumentRead, DocumentCreate, DocumentUpdate, \
+                        Category, DocumentCategory, DocumentCategoryBase
 from app.functions import api_key_auth, random_text
 
 
@@ -46,15 +49,108 @@ async def upload_doc(file: UploadFile):
     filepath = os.path.join('app', 'uploads', filename)
     async with aiofiles.open(filepath, 'wb') as out_file:
         await out_file.write(content)
-    return {"file_type": content_type, "file_name": filename}
+    return {"file_type": content_type, "file_path": filepath}
 
 
-@app.get("/api/download_doc/{file_name}", dependencies=[Depends(api_key_auth)])
-async def download_doc(file_name: str):
-    filepath = os.path.join('app', 'uploads', file_name)
+@app.get("/api/download_doc/{filepath}", dependencies=[Depends(api_key_auth)])
+async def download_doc(filepath: str):
     if not os.path.isfile(filepath):
         raise HTTPException(status_code=404, detail="File is not exist!!")
     else:
         mime = magic.Magic(mime=True)
         content_type = mime.from_file(filepath)
+        file_name = os.path.split(filepath)[-1]
         return FileResponse(path=filepath, filename=file_name, media_type=content_type)
+
+
+@app.post("/api/create_doc", dependencies=[Depends(api_key_auth)], response_model=DocumentRead)
+async def create_doc(doc: DocumentCreate, session: AsyncSession = Depends(get_session)):
+    try:
+        doc_obj = Document(name=doc.name, type=doc.type, path=doc.path)
+        session.add(doc_obj)
+        await session.commit()
+        await session.refresh(doc_obj)
+        doc_id = doc_obj.id
+        categories = doc.categories
+        doc_cat_list = []
+        for category in categories:
+            doc_cat_obj = DocumentCategory(document_id=doc_id, category_id=category.category_id, value=category.value)
+            session.add(doc_cat_obj)
+            session.refresh(doc_cat_obj)
+            doc_cat_list.append(doc_cat_obj)
+            await session.commit()
+        doc_read_obj = DocumentRead(id=doc_id, name=doc_obj.name, type=doc_obj.type, path=doc_obj.path, categories=doc_cat_list)
+        return doc_read_obj
+    except Exception as e:
+        raise HTTPException(Status_code=400, detail=str(e))
+
+
+@app.patch("/api/update_doc", dependencies=[Depends(api_key_auth)], response_model=DocumentRead)
+async def update_doc(doc_id: int, doc: DocumentUpdate, session: AsyncSession = Depends(get_session)):
+    doc_obj = await session.get(Document, doc_id)
+    if not doc_obj:
+        raise HTTPException(status_code=404, detail="Document not found!!")
+    try:
+        setattr(doc_obj, "name", doc.name)
+        session.add(doc_obj)
+        await session.commit()
+        await session.refresh(doc_obj)
+
+        statement = select(DocumentCategory).where(DocumentCategory.document_id == doc_id)
+        results = await session.exec(statement)
+        for doc_cat in results:
+            await session.delete(doc_cat)
+
+        categories = doc.categories
+        doc_cat_list = []
+        for category in categories:
+            doc_cat_obj = DocumentCategory(document_id=doc_id, category_id=category.category_id, value=category.value)
+            session.add(doc_cat_obj)
+            session.refresh(doc_cat_obj)
+            doc_cat_list.append(doc_cat_obj)
+            await session.commit()
+        doc_read_obj = DocumentRead(id=doc_id, name=doc_obj.name, type=doc_obj.type, path=doc_obj.path, categories=doc_cat_list)
+        return doc_read_obj
+    except Exception as e:
+        raise HTTPException(Status_code=400, detail=str(e))
+
+
+@app.delete("/api/delete_doc", dependencies=[Depends(api_key_auth)])
+async def delete_doc(doc_id: int, session: AsyncSession = Depends(get_session)):
+    doc_obj = await session.get(Document, doc_id)
+    if not doc_obj:
+        raise HTTPException(status_code=404, detail="Document not found!!")
+    try:
+        statement = select(DocumentCategory).where(DocumentCategory.document_id == doc_id)
+        results = await session.exec(statement)
+        for doc_cat in results:
+            await session.delete(doc_cat)
+
+        await session.delete(doc_obj)
+    except Exception as e:
+        raise HTTPException(Status_code=400, detail=str(e))
+
+
+@app.get("/api/get_doc_by_id", dependencies=[Depends(api_key_auth)], response_model=DocumentRead)
+async def get_doc(doc_id: int, session: AsyncSession = Depends(get_session)):
+    doc_obj = await session.get(Document, doc_id)
+    if not doc_obj:
+        raise HTTPException(status_code=404, detail="Document not found!!")
+    statement = select(DocumentCategory).where(DocumentCategory.document_id == doc_id)
+    results = await session.exec(statement)
+    doc_cat_list = []
+    for doc_cat in results:
+        doc_cat_obj = DocumentCategoryBase(category_id=doc_cat.category_id, value=doc_cat.value)
+        doc_cat_list.append(doc_cat_obj)
+    ret_doc_obj = DocumentRead(id=doc_obj.id, name=doc_obj.name, type=doc_obj.type, categories=doc_cat_list)
+    return ret_doc_obj
+
+
+@app.get("/api/get_category_list", dependencies=[Depends(api_key_auth)], response_model=List(Category))
+async def get_category_list(session: AsyncSession = Depends(get_session)):
+    statement = select(Category)
+    results = await session.exec(statement)
+    return_list = []
+    for res in results:
+        return_list.append(res)
+    return return_list

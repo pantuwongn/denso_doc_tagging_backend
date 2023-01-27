@@ -7,7 +7,9 @@ Create Date: 2023-01-27 09:41:51.430387
 """
 from alembic import op
 import sqlalchemy as sa
-import sqlmodel   
+from sqlalchemy import orm
+import sqlmodel
+from app.models import Category
 
 
 # revision identifiers, used by Alembic.
@@ -15,6 +17,15 @@ revision = '35470a7b70ee'
 down_revision = None
 branch_labels = None
 depends_on = None
+
+initial_category = [
+    'Document type',
+    'Product',
+    'Part no.',
+    'Process',
+    'Machine no.',
+    'Line name'
+]
 
 
 def upgrade() -> None:
@@ -41,6 +52,12 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['document_id'], ['document.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
+
+    bind = op.get_bind()
+    session = orm.Session(bind=bind)
+    categories = [Category(name=name, enable=True) for name in initial_category]
+    session.add_all(categories)
+    session.commit()
     # ### end Alembic commands ###
 
 

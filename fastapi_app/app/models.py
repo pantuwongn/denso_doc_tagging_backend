@@ -1,17 +1,5 @@
 from sqlmodel import SQLModel, Field
-
-
-class DocumentBase(SQLModel):
-    name: str
-
-
-class Document(DocumentBase, table=True):
-    id: int = Field(default=None, primary_key=True)
-    type: str
-    path: str
-
-class DocumentCreate(DocumentBase):
-    pass
+from typing import List
 
 
 class CategoryBase(SQLModel):
@@ -27,8 +15,34 @@ class CategoryCreate(CategoryBase):
     pass
 
 
-class DocumentCategory(SQLModel, table=True):
-    id: int = Field(default=None, primary_key=True)
-    document_id: int = Field(default=None, foreign_key="document.id")
+class DocumentCategoryBase(SQLModel):
     category_id: int = Field(default=None, foreign_key="category.id")
     value: str
+
+
+class DocumentCategory(DocumentCategoryBase, table=True):
+    id: int = Field(default=None, primary_key=True)
+    document_id: int = Field(default=None, foreign_key="document.id")
+
+
+class DocumentBase(SQLModel):
+    name: str
+    type: str
+    path: str
+
+
+class Document(DocumentBase, table=True):
+    id: int = Field(default=None, primary_key=True)
+
+
+class DocumentCreate(DocumentBase):
+    categories: List[DocumentCategoryBase]
+
+
+class DocumentRead(Document):
+    categories: List[DocumentCategoryBase]
+
+
+class DocumentUpdate(SQLModel):
+    name: str
+    categories: List[DocumentCategoryBase]
