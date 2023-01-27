@@ -5,12 +5,12 @@ from fastapi import Depends, FastAPI, UploadFile, HTTPException
 from starlette.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import select
-from typing import List
-
+from sqlmodel import select, and_
+from typing import List, Dict
 from app.db import get_session
 from app.models import Document, DocumentRead, DocumentCreate, DocumentUpdate, \
-                        Category, DocumentCategory, DocumentCategoryBase
+                        Category, DocumentCategory, DocumentCategoryBase, DocumentQuery, \
+                        CategoryCreate
 from app.functions import api_key_auth, random_text
 
 
@@ -146,6 +146,32 @@ async def get_doc(doc_id: int, session: AsyncSession = Depends(get_session)):
     return ret_doc_obj
 
 
+@app.get("/api/query_doc", dependencies=[Depends(api_key_auth)], response_model=List[DocumentRead])
+async def query_doc(query_list: List[DocumentQuery], session: AsyncSession = Depends(get_session)):str
+    filter_list = []
+    for query in query_list:
+        q = and_(DocumentCategory.category_id == query.category_id, col(DocumentCategory.value).contains(query.value))
+        filter_list.append(q)
+    statement = select(DocumentCategory).where(and_(*filter_list))
+    results = await session.exec(statement)
+    doc_cat_dict = {}
+    for res in results:
+        doc_id = res.document_id
+        if doc_id not in doc_cat_dict:
+            doc_cat_dict[doc_id] = []
+        doc_cat_obj = DocumentCategoryBase(category_id=res.category_id, value=res.value)
+        doc_cat_dict[doc_id].append(doc_cat_obj)
+
+    returnList = []
+    for doc_id in doc_cat_dict:
+        doc_obj = await session.get(Document, doc_id)
+        if not doc_obj:
+            continue
+        else:
+            ret_doc_obj = DocumentRead(id=doc_obj.id, name=doc_obj.name, type=doc_obj.type, categories=doc_cat_dict[doc_id])
+    return returnList
+
+
 @app.get("/api/get_category_list", dependencies=[Depends(api_key_auth)], response_model=List(Category))
 async def get_category_list(session: AsyncSession = Depends(get_session)):
     statement = select(Category)
@@ -154,3 +180,31 @@ async def get_category_list(session: AsyncSession = Depends(get_session)):
     for res in results:
         return_list.append(res)
     return return_list
+
+
+@app.post("/api/create_category", dependencies=[Depends(api_key_auth)], response_model=Category)
+async def create_category(category: CategoryCreate, session: AsyncSession = Depends(get_session)):
+    try:
+        cat_obj = Category(name=category.name, enable=category.enable)
+        session.add(cat_obj)
+        await session.commit()
+        await session.refresh(cat_obj)
+        return cat_obj
+    except Exception as e:
+        raise HTTPException(Status_code=400, detail=str(e))
+
+
+@app.patch("/api/update_category", dependencies=[Depends(api_key_auth)], response_model=Category)
+async def update_category(category_id: int, category: CategoryCreate, session: AsyncSession = Depends(get_session)):
+    cat_obj = await session.get(Document, category_id)
+    if not cat_obj:
+        raise HTTPException(status_code=404, detail="Category not found!!")
+    try:
+        setattr(cat_obj, "name", category.name)
+        setattr(cat_obj, "enable", category.enable)
+        session.add(cat_obj)
+        await session.commit()
+        await session.refresh(cat_obj)
+        return cat_obj
+    except Exception as e:
+        raise HTTPException(Status_code=400, detail=str(e))

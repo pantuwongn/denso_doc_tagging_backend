@@ -46,3 +46,8 @@ class DocumentRead(Document):
 class DocumentUpdate(SQLModel):
     name: str
     categories: List[DocumentCategoryBase]
+
+
+class DocumentQuery(SQLModel):
+    category_id: int
+    value: str
