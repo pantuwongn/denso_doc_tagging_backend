@@ -147,7 +147,7 @@ async def get_doc(doc_id: int, session: AsyncSession = Depends(get_session)):
 
 
 @app.get("/api/query_doc", dependencies=[Depends(api_key_auth)], response_model=List[DocumentRead])
-async def query_doc(query_list: List[DocumentQuery], session: AsyncSession = Depends(get_session)):str
+async def query_doc(query_list: List[DocumentQuery], session: AsyncSession = Depends(get_session)):
     filter_list = []
     for query in query_list:
         q = and_(DocumentCategory.category_id == query.category_id, col(DocumentCategory.value).contains(query.value))
