@@ -140,7 +140,7 @@ async def get_doc(doc_id: int, session: AsyncSession = Depends(get_session)):
     results = await session.execute(statement)
     doc_cat_list = []
     for doc_cat in results:
-        doc_cat_obj = DocumentCategoryBase(category_id=doc_cat.category_id, value=doc_cat.value)
+        doc_cat_obj = DocumentCategoryBase(category_id=doc_cat[0].category_id, value=doc_cat[0].value)
         doc_cat_list.append(doc_cat_obj)
     ret_doc_obj = DocumentRead(id=doc_obj.id, name=doc_obj.name, type=doc_obj.type, categories=doc_cat_list)
     return ret_doc_obj
