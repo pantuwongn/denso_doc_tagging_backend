@@ -49,17 +49,17 @@ async def upload_doc(file: UploadFile):
     filepath = os.path.join('app', 'uploads', filename)
     async with aiofiles.open(filepath, 'wb') as out_file:
         await out_file.write(content)
-    return {"file_type": content_type, "file_path": filepath}
+    return {"file_type": content_type, "file_name": filename}
 
 
-@app.get("/api/download_doc/{filepath}", dependencies=[Depends(api_key_auth)])
-async def download_doc(filepath: str):
+@app.get("/api/download_doc/{file_name}", dependencies=[Depends(api_key_auth)])
+async def download_doc(file_name: str):
+    filepath = os.path.join('app', 'uploads', file_name)
     if not os.path.isfile(filepath):
         raise HTTPException(status_code=404, detail="File is not exist!!")
     else:
         mime = magic.Magic(mime=True)
         content_type = mime.from_file(filepath)
-        file_name = os.path.split(filepath)[-1]
         return FileResponse(path=filepath, filename=file_name, media_type=content_type)
 
 
