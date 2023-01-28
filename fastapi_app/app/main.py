@@ -149,28 +149,34 @@ async def get_doc(doc_id: int, session: AsyncSession = Depends(get_session)):
 
 @app.post("/api/query_doc", dependencies=[Depends(api_key_auth)], response_model=List[DocumentRead])
 async def query_doc(query_list: List[DocumentQuery], session: AsyncSession = Depends(get_session)):
-    filter_list = []
+    final_doc_id_list = []
     for query in query_list:
         q = and_(DocumentCategory.category_id == query.category_id, col(DocumentCategory.value).contains(query.value))
-        filter_list.append(q)
-    statement = select(DocumentCategory).where(and_(*filter_list))
-    results = await session.execute(statement)
-    doc_cat_dict = {}
-    for res in results:
-        print('asdf', res)
-        doc_id = res[0].document_id
-        if doc_id not in doc_cat_dict:
-            doc_cat_dict[doc_id] = []
-        doc_cat_obj = DocumentCategoryBase(category_id=res[0].category_id, value=res[0].value)
-        doc_cat_dict[doc_id].append(doc_cat_obj)
+        statement = select(DocumentCategory).where(q)
+        results = await session.execute(statement)
+        doc_id_list = []
+        for res in results:
+            doc_id_list.append(res[0].document_id)
+        if len(final_doc_id_list) == 0:
+            intersect = doc_id_list
+        else:
+            intersect = [value for value in doc_id_list if value in final_doc_id_list]
+        final_doc_id_list = intersect
 
     returnList = []
-    for doc_id in doc_cat_dict:
+    for doc_id in final_doc_id_list:
         doc_obj = await session.get(Document, doc_id)
         if not doc_obj:
             continue
         else:
-            ret_doc_obj = DocumentRead(id=doc_obj.id, name=doc_obj.name, type=doc_obj.type, path=doc_obj.path, categories=doc_cat_dict[doc_id])
+            statement = select(DocumentCategory).where(DocumentCategory.document_id == doc_id)
+            results = await session.execute(statement)
+            doc_cat_list = []
+            for doc_cat in results:
+                doc_cat_obj = DocumentCategoryBase(category_id=doc_cat[0].category_id, value=doc_cat[0].value)
+                doc_cat_list.append(doc_cat_obj)
+            ret_doc_obj = DocumentRead(id=doc_obj.id, name=doc_obj.name, type=doc_obj.type, path=doc_obj.path, categories=doc_cat_list)
+            returnList.append(ret_doc_obj)
     return returnList
 
 
