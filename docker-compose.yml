@@ -23,6 +23,7 @@ services:
       - "8888:8888"
     volumes:
       - ./fastapi_app/app/:/code/app/
+      - ./fastapi_app/app/uploads/:/code/app/uploads
       - ./fastapi_app/:/code/
       - ./fastapi_app/requirements.txt:/code/requirements.txt
     environment:
