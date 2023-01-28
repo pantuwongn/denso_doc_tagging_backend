@@ -124,8 +124,9 @@ async def delete_doc(doc_id: int, session: AsyncSession = Depends(get_session)):
         statement = select(DocumentCategory).where(DocumentCategory.document_id == doc_id)
         results = await session.execute(statement)
         for doc_cat in results:
-            await session.delete(doc_cat)
-
+            await session.delete(doc_cat[0])
+        file_path = doc_obj.path
+        os.remove(file_path)
         await session.delete(doc_obj)
     except Exception as e:
         raise HTTPException(Status_code=400, detail=str(e))
@@ -156,10 +157,11 @@ async def query_doc(query_list: List[DocumentQuery], session: AsyncSession = Dep
     results = await session.execute(statement)
     doc_cat_dict = {}
     for res in results:
-        doc_id = res.document_id
+        print('asdf', res)
+        doc_id = res[0].document_id
         if doc_id not in doc_cat_dict:
             doc_cat_dict[doc_id] = []
-        doc_cat_obj = DocumentCategoryBase(category_id=res.category_id, value=res.value)
+        doc_cat_obj = DocumentCategoryBase(category_id=res[0].category_id, value=res[0].value)
         doc_cat_dict[doc_id].append(doc_cat_obj)
 
     returnList = []
@@ -168,7 +170,7 @@ async def query_doc(query_list: List[DocumentQuery], session: AsyncSession = Dep
         if not doc_obj:
             continue
         else:
-            ret_doc_obj = DocumentRead(id=doc_obj.id, name=doc_obj.name, type=doc_obj.type, categories=doc_cat_dict[doc_id])
+            ret_doc_obj = DocumentRead(id=doc_obj.id, name=doc_obj.name, type=doc_obj.type, path=doc_obj.path, categories=doc_cat_dict[doc_id])
     return returnList
 
 
