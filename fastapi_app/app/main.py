@@ -5,7 +5,7 @@ from fastapi import Depends, FastAPI, UploadFile, HTTPException
 from starlette.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import select, and_
+from sqlmodel import select, and_, col
 from typing import List, Dict
 from app.db import get_session
 from app.models import Document, DocumentRead, DocumentCreate, DocumentUpdate, \
