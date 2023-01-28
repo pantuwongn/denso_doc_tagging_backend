@@ -49,7 +49,7 @@ async def upload_doc(file: UploadFile):
     filepath = os.path.join('app', 'uploads', filename)
     async with aiofiles.open(filepath, 'wb') as out_file:
         await out_file.write(content)
-    return {"file_type": content_type, "file_name": filename}
+    return {"file_type": content_type, "file_path": filepath}
 
 
 @app.get("/api/download_doc/{file_name}", dependencies=[Depends(api_key_auth)])
@@ -99,7 +99,7 @@ async def update_doc(doc_id: int, doc: DocumentUpdate, session: AsyncSession = D
         statement = select(DocumentCategory).where(DocumentCategory.document_id == doc_id)
         results = await session.execute(statement)
         for doc_cat in results:
-            await session.delete(doc_cat)
+            await session.delete(doc_cat[0])
 
         categories = doc.categories
         doc_cat_list = []
@@ -112,7 +112,7 @@ async def update_doc(doc_id: int, doc: DocumentUpdate, session: AsyncSession = D
         doc_read_obj = DocumentRead(id=doc_id, name=doc_obj.name, type=doc_obj.type, path=doc_obj.path, categories=doc_cat_list)
         return doc_read_obj
     except Exception as e:
-        raise HTTPException(Status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @app.delete("/api/delete_doc", dependencies=[Depends(api_key_auth)])
