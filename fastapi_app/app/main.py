@@ -125,6 +125,7 @@ async def delete_doc(doc_id: int, session: AsyncSession = Depends(get_session)):
         results = await session.execute(statement)
         for doc_cat in results:
             await session.delete(doc_cat[0])
+            await session.commit()
         file_path = doc_obj.path
         # os.remove(file_path)
         await session.delete(doc_obj)
