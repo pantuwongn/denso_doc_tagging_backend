@@ -128,8 +128,10 @@ async def delete_doc(doc_id: int, session: AsyncSession = Depends(get_session)):
             await session.commit()
         file_path = doc_obj.path
         # os.remove(file_path)
+        print(doc_obj)
         await session.delete(doc_obj)
         await session.commit()
+        return {'detail': 'Data deleted'}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
