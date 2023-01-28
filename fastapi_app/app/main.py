@@ -97,7 +97,7 @@ async def update_doc(doc_id: int, doc: DocumentUpdate, session: AsyncSession = D
         await session.refresh(doc_obj)
 
         statement = select(DocumentCategory).where(DocumentCategory.document_id == doc_id)
-        results = await session.exec(statement)
+        results = await session.execute(statement)
         for doc_cat in results:
             await session.delete(doc_cat)
 
@@ -122,7 +122,7 @@ async def delete_doc(doc_id: int, session: AsyncSession = Depends(get_session)):
         raise HTTPException(status_code=404, detail="Document not found!!")
     try:
         statement = select(DocumentCategory).where(DocumentCategory.document_id == doc_id)
-        results = await session.exec(statement)
+        results = await session.execute(statement)
         for doc_cat in results:
             await session.delete(doc_cat)
 
@@ -137,7 +137,7 @@ async def get_doc(doc_id: int, session: AsyncSession = Depends(get_session)):
     if not doc_obj:
         raise HTTPException(status_code=404, detail="Document not found!!")
     statement = select(DocumentCategory).where(DocumentCategory.document_id == doc_id)
-    results = await session.exec(statement)
+    results = await session.execute(statement)
     doc_cat_list = []
     for doc_cat in results:
         doc_cat_obj = DocumentCategoryBase(category_id=doc_cat.category_id, value=doc_cat.value)
@@ -153,7 +153,7 @@ async def query_doc(query_list: List[DocumentQuery], session: AsyncSession = Dep
         q = and_(DocumentCategory.category_id == query.category_id, col(DocumentCategory.value).contains(query.value))
         filter_list.append(q)
     statement = select(DocumentCategory).where(and_(*filter_list))
-    results = await session.exec(statement)
+    results = await session.execute(statement)
     doc_cat_dict = {}
     for res in results:
         doc_id = res.document_id
@@ -175,7 +175,7 @@ async def query_doc(query_list: List[DocumentQuery], session: AsyncSession = Dep
 @app.get("/api/get_category_list", dependencies=[Depends(api_key_auth)], response_model=List[Category])
 async def get_category_list(session: AsyncSession = Depends(get_session)):
     statement = select(Category)
-    results = await session.exec(statement)
+    results = await session.execute(statement)
     return_list = []
     for res in results:
         return_list.append(res)
