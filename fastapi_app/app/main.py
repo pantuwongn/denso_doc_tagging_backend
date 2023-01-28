@@ -196,7 +196,7 @@ async def create_category(category: CategoryCreate, session: AsyncSession = Depe
 
 @app.patch("/api/update_category", dependencies=[Depends(api_key_auth)], response_model=Category)
 async def update_category(category_id: int, category: CategoryCreate, session: AsyncSession = Depends(get_session)):
-    cat_obj = await session.get(Document, category_id)
+    cat_obj = await session.get(Category, category_id)
     if not cat_obj:
         raise HTTPException(status_code=404, detail="Category not found!!")
     try:
