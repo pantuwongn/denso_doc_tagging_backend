@@ -82,7 +82,7 @@ async def create_doc(doc: DocumentCreate, session: AsyncSession = Depends(get_se
         doc_read_obj = DocumentRead(id=doc_id, name=doc_obj.name, type=doc_obj.type, path=doc_obj.path, categories=doc_cat_list)
         return doc_read_obj
     except Exception as e:
-        raise HTTPException(Status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @app.patch("/api/update_doc", dependencies=[Depends(api_key_auth)], response_model=DocumentRead)
@@ -129,7 +129,7 @@ async def delete_doc(doc_id: int, session: AsyncSession = Depends(get_session)):
         os.remove(file_path)
         await session.delete(doc_obj)
     except Exception as e:
-        raise HTTPException(Status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @app.get("/api/get_doc_by_id", dependencies=[Depends(api_key_auth)], response_model=DocumentRead)
@@ -199,7 +199,7 @@ async def create_category(category: CategoryCreate, session: AsyncSession = Depe
         await session.refresh(cat_obj)
         return cat_obj
     except Exception as e:
-        raise HTTPException(Status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @app.patch("/api/update_category", dependencies=[Depends(api_key_auth)], response_model=Category)
@@ -215,4 +215,4 @@ async def update_category(category_id: int, category: CategoryCreate, session: A
         await session.refresh(cat_obj)
         return cat_obj
     except Exception as e:
-        raise HTTPException(Status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e))
