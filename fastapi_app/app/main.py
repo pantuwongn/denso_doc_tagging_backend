@@ -126,6 +126,7 @@ async def delete_doc(doc_id: int, session: AsyncSession = Depends(get_session)):
         for doc_cat in results:
             await session.delete(doc_cat[0])
         file_path = doc_obj.path
+        print(os.getcwd())
         os.remove(file_path)
         await session.delete(doc_obj)
     except Exception as e:
