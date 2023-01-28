@@ -178,6 +178,7 @@ async def get_category_list(session: AsyncSession = Depends(get_session)):
     results = await session.execute(statement)
     return_list = []
     for res in results:
+        cat_obj = Category(id=res.id, name=res.name, enable=res.enable)
         return_list.append(res)
     return return_list
 
