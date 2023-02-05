@@ -91,10 +91,9 @@ const UploadDocumentPage: NextPage = () => {
 
     let queryPayload = formWithNameToQueryParser(values, file_type, file_path);
     await createDoc(queryPayload);
-    message.info("You have sucessfully created the document!")
+    message.info("You have sucessfully created the document!");
 
-    router.push({ pathname: '/document' })
-
+    router.push({ pathname: "/document" });
   };
 
   const LeftNode = () => {
@@ -122,6 +121,7 @@ const UploadDocumentPage: NextPage = () => {
               onClick={() => {
                 const input = document.createElement("input");
                 input.type = "file";
+                input.accept = "application/pdf";
                 //@ts-ignore
                 input.onchange = handleFileChange;
                 input.click();
@@ -139,7 +139,7 @@ const UploadDocumentPage: NextPage = () => {
     key: 1,
     index: 0,
     rules: [{ required: true, message: "Please input your name field" }],
-  }
+  };
 
   const RightNode = () => {
     return (

@@ -19,7 +19,13 @@ import {
 import DocumentItem from "@/components/documents/document";
 import { useRouter } from "next/router";
 import useSWR from "swr";
-import { getCategories, IQueryDoc, queryDoc, queryInitialDoc } from "@/actions";
+import {
+  getCategories,
+  IQueryDoc,
+  IStatuslessCategory,
+  queryDoc,
+  queryInitialDoc,
+} from "@/actions";
 import { useEffect, useState } from "react";
 import {
   DynamicFormsElement,
@@ -40,7 +46,10 @@ const DocumentPage: NextPage = () => {
     1: [""],
   });
 
-  const { data: fetchedDocs } = useSWR("/query_doc", () => queryInitialDoc());
+  const { data: fetchedDocs } = useSWR(
+    Object.keys(router.query).length === 0 ? "/query_doc" : null,
+    () => queryInitialDoc()
+  );
 
   const { data: fetchedCategories } = useSWR("/get_category_list", () =>
     getCategories()
@@ -61,6 +70,11 @@ const DocumentPage: NextPage = () => {
   };
 
   useEffect(() => {
+    initialize();
+    console.log("router query ", Object.keys(router.query).length);
+  }, [router.query, fetchedCategories]);
+
+  const initialize = async () => {
     if (router.query && Object.keys(router.query).length) {
       let tempElement: IDynamicForm = {};
       for (const key in router.query) {
@@ -74,16 +88,37 @@ const DocumentPage: NextPage = () => {
         }
       }
       setDynamicForm(tempElement);
-      console.log(tempElement);
 
       //To reset default first field initialValue
       if (tempElement[1]) mainForm.setFieldValue("1,0", tempElement[1][0]);
 
-      //Init search when change route as same as finish the form
-      mainForm.submit();
+      let queryPayload = dynamicFormToSearchParser(tempElement);
+      let data = await queryDoc(queryPayload);
+      setSearchedDoc(data);
     }
-  }, [router.query, fetchedCategories]);
+  };
 
+  const dynamicFormToSearchParser = (dynamicForm: IDynamicForm) => {
+    let result: IStatuslessCategory[] = [];
+    for (const key in dynamicForm) {
+      if (Object.prototype.hasOwnProperty.call(dynamicForm, key)) {
+        const element = dynamicForm[key];
+        const parsedKey = parseInt(key);
+        element.forEach((e) => {
+          result.push({
+            category_id: parsedKey,
+            value: e,
+          });
+        });
+      }
+    }
+    return result;
+  };
+
+  //tempting to use this instead of parser above
+  //add should router push
+  //but it did not really make any sense
+  //so i made the function above to parse the query then fetch instead
   const onFinishMainForm = async (values: any) => {
     console.log("Main Form Value ", values);
     let queryPayload = categoriesformToQueryParser(values);
