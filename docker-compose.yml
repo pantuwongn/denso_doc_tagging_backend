@@ -15,12 +15,16 @@ services:
       - ./nginx/cert/server.crt:/etc/nginx/cert/server.crt
       - ./nginx/cert/server.key:/etc/nginx/cert/server.key 
     depends_on:
+      - nextjs
+  nextjs:
+    build: ./nextjs
+    container_name: nextjs
+    restart: always
+    depends_on:
       - fastapi_doc
   fastapi_doc:
     build: ./fastapi_app
     container_name: fastapi_doc
-    ports: 
-      - "8888:8888"
     volumes:
       - ./fastapi_app/app/:/code/app/
       - ./fastapi_app/app/uploads/:/code/app/uploads
