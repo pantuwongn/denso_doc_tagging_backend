@@ -153,8 +153,14 @@ async def get_doc(doc_id: int, session: AsyncSession = Depends(get_session)):
 
 @app.post("/api/query_doc", dependencies=[Depends(api_key_auth)], response_model=List[DocumentRead])
 async def query_doc(query_list: List[DocumentQuery], session: AsyncSession = Depends(get_session)):
+    statement = select(DocumentCategory)
+    results = await session.execute(statement)
     final_doc_id_list = []
+    for res in results:
+        final_doc_id_list.append(res[0].document_id)
     for query in query_list:
+        if not query.value.strip():
+            continue
         q = and_(DocumentCategory.category_id == query.category_id, DocumentCategory.value.ilike('%'+ query.value + '%'))
         statement = select(DocumentCategory).where(q)
         results = await session.execute(statement)
@@ -168,7 +174,8 @@ async def query_doc(query_list: List[DocumentQuery], session: AsyncSession = Dep
         final_doc_id_list = intersect
 
     returnList = []
-    for doc_id in final_doc_id_list:
+    doc_id_set = set(final_doc_id_list)
+    for doc_id in doc_id_set:
         doc_obj = await session.get(Document, doc_id)
         if not doc_obj:
             continue
