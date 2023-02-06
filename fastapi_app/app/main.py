@@ -5,6 +5,7 @@ from fastapi import Depends, FastAPI, UploadFile, HTTPException
 from starlette.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import func
 from sqlmodel import select, and_, col
 from typing import List, Dict
 from app.db import get_session
@@ -154,7 +155,7 @@ async def get_doc(doc_id: int, session: AsyncSession = Depends(get_session)):
 async def query_doc(query_list: List[DocumentQuery], session: AsyncSession = Depends(get_session)):
     final_doc_id_list = []
     for query in query_list:
-        q = and_(DocumentCategory.category_id == query.category_id, col(DocumentCategory.value).contains(query.value))
+        q = and_(DocumentCategory.category_id == query.category_id, DocumentCategory.value.ilike('%'+ query.value + '%'))
         statement = select(DocumentCategory).where(q)
         results = await session.execute(statement)
         doc_id_list = []
