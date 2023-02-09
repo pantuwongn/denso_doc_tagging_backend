@@ -20,10 +20,10 @@ import {
 import { useRouter } from "next/router";
 import {
   categoriesformToQueryParser,
+  // DynamicFormsElement,
   IDynamicForm,
   mapPayloadToSearchParams,
 } from "@/functions/dynamic-form.function";
-import { DynamicFormsElement } from "@/components/documents/dynamic-form";
 import { useState } from "react";
 import { getCategories } from "@/actions";
 import useSWR from "swr";
@@ -176,14 +176,14 @@ const DocumentQRPage: NextPage = () => {
   const RightNode = () => {
     return (
       <>
-        {/* <Form
+        <Form
           form={mainForm}
           layout="vertical"
           className="overflow-y-auto h-[2000px] drop-shadow-md"
           onFinish={(values) => onFinishMainForm(values)}
         >
-          {DynamicFormsElement(dynamicForm, fetchedCategories)}
-        </Form> */}
+          {/* {DynamicFormsElement(dynamicForm, fetchedCategories)} */}
+        </Form>
         <div className="flex h-40 justify-end items-center gap-2 p-2 rounded-md drop-shadow-md">
           <Tooltip title="qr scan">
             <Button
