@@ -20,10 +20,10 @@ import {
 import { useRouter } from "next/router";
 import {
   categoriesformToQueryParser,
-  DynamicFormsElement,
   IDynamicForm,
   mapPayloadToSearchParams,
 } from "@/functions/dynamic-form.function";
+import { DynamicFormsElement } from "@/components/documents/dynamic-form";
 import { useState } from "react";
 import { getCategories } from "@/actions";
 import useSWR from "swr";
