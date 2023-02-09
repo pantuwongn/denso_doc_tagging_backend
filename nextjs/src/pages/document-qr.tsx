@@ -47,7 +47,6 @@ const DocumentQRPage: NextPage = () => {
   const categories = fetchedCategoryParser(fetchedCategories);
 
   const onDropdownMenuClick: MenuProps["onClick"] = ({ key }) => {
-    message.info(`Click on item ${key}`);
     let parsedKey = parseInt(key);
     if (dynamicForm[parsedKey]) {
       let newElement = { [parsedKey]: [...dynamicForm[parsedKey], ""] };

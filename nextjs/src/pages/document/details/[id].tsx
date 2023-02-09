@@ -26,6 +26,10 @@ import { IDynamicForm } from "@/functions/dynamic-form.function";
 import { useEffect, useState } from "react";
 import DynamicTag, { IDynamicTag } from "@/components/documents/dynamic-tag";
 import { generateCurrentPathToQR } from "@/functions/qr-code.function";
+import {
+  downloadDocFromFileName,
+  getFileNamefromPath,
+} from "@/functions/download.function";
 
 const DocumentDetails: NextPage = () => {
   const router = useRouter();
@@ -59,17 +63,8 @@ const DocumentDetails: NextPage = () => {
   }, [fetchedCategories, fetchedDocs]);
 
   const handleDownloadDoc = async () => {
-    const splittedName = fetchedDocs?.path.split("/");
-    if (!splittedName) return;
-
-    const fileName = splittedName[splittedName?.length - 1];
-    let resPDF = await downloadDoc(fileName);
-
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(resPDF as Blob);
-    link.href = url;
-    link.download = `${fileName}`;
-    link.click();
+    const fileName = getFileNamefromPath(fetchedDocs?.path || "");
+    downloadDocFromFileName(fileName || "");
   };
 
   const gotoEditPage = (id: string) => {
@@ -109,7 +104,10 @@ const DocumentDetails: NextPage = () => {
     return (
       <>
         <div className="flex flex-col gap-5 overflow-y-auto h-[2000px] drop-shadow-md">
-          <h1 className="text-xl">{fetchedDocs?.name}</h1>
+          <h1>Name: </h1>
+          <div>
+            <Tag>{fetchedDocs?.name}</Tag>
+          </div>
           <DynamicTag dynamicTag={dynamicTag} categories={fetchedCategories} />
         </div>
 

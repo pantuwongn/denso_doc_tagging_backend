@@ -2,12 +2,7 @@ import Head from "next/head";
 import type { NextPage } from "next";
 import Container from "@/components/layout";
 import HorizontalSplitLayout from "@/components/layout/horizontal-split";
-import {
-  InfoCircleOutlined,
-  PlusOutlined,
-  SendOutlined,
-  UploadOutlined,
-} from "@ant-design/icons";
+import { PlusOutlined, SendOutlined, UploadOutlined } from "@ant-design/icons";
 import {
   Button,
   Dropdown,
@@ -22,17 +17,15 @@ import Image from "next/image";
 import DocumentPic from "@/public/documents.png";
 import { useState } from "react";
 import {
-  DynamicFormsElement,
-  categoriesformToQueryParser,
   formWithNameToQueryParser,
   IDynamicForm,
-  IDynamicFormRules,
 } from "@/functions/dynamic-form.function";
 import useSWR from "swr";
 import { createDoc, getCategories, uploadDoc } from "@/actions";
 import { fetchedCategoryParser } from "@/functions/category.function";
 import { MAX_FILE_SIZE } from "@/constants";
 import { bytesToMB } from "@/util/size-converter";
+import { DynamicFormsElement } from "@/components/documents/dynamic-form";
 
 const UploadDocumentPage: NextPage = () => {
   const [mainForm] = Form.useForm();
@@ -42,7 +35,7 @@ const UploadDocumentPage: NextPage = () => {
   const router = useRouter();
 
   const [dynamicForm, setDynamicForm] = useState<IDynamicForm>({
-    1: [""],
+    1: [],
   });
 
   const { data: fetchedCategories } = useSWR("/get_category_list", () =>
@@ -52,13 +45,12 @@ const UploadDocumentPage: NextPage = () => {
   const categories = fetchedCategoryParser(fetchedCategories);
 
   const onDropdownMenuClick: MenuProps["onClick"] = ({ key }) => {
-    message.info(`Click on item ${key}`);
     let parsedKey = parseInt(key);
     if (dynamicForm[parsedKey]) {
       let newElement = { [parsedKey]: [...dynamicForm[parsedKey], ""] };
       setDynamicForm({ ...dynamicForm, ...newElement });
     } else {
-      let newElement = { [parsedKey]: [""] };
+      let newElement = { [parsedKey]: [] };
       setDynamicForm({ ...dynamicForm, ...newElement });
     }
   };
@@ -164,7 +156,12 @@ const UploadDocumentPage: NextPage = () => {
           >
             <Input placeholder="Name Field" />
           </Form.Item>
-          {DynamicFormsElement(dynamicForm, fetchedCategories, uploadFormRules)}
+          <DynamicFormsElement
+            dynamicForm={dynamicForm}
+            categories={fetchedCategories}
+            formRule={uploadFormRules}
+            selectKey={[1]}
+          />
         </Form>
         <div className="flex h-40 justify-end items-center gap-2 p-2 rounded-md drop-shadow-md">
           <Tooltip title="submit">

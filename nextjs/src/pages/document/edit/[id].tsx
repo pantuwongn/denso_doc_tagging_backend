@@ -2,12 +2,7 @@ import Head from "next/head";
 import type { NextPage } from "next";
 import Container from "@/components/layout";
 import HorizontalSplitLayout from "@/components/layout/horizontal-split";
-import {
-  InfoCircleOutlined,
-  PlusOutlined,
-  DeleteOutlined,
-  SaveOutlined,
-} from "@ant-design/icons";
+import { PlusOutlined, DeleteOutlined, SaveOutlined } from "@ant-design/icons";
 import {
   Button,
   Dropdown,
@@ -24,12 +19,12 @@ import DocumentPic from "@/public/documents.png";
 import { useEffect, useState } from "react";
 import {
   categoriesformToQueryParser,
-  DynamicFormsElement,
   IDynamicForm,
 } from "@/functions/dynamic-form.function";
 import { fetchedCategoryParser } from "@/functions/category.function";
 import { deleteDoc, getCategories, getDocById, updateDoc } from "@/actions";
 import useSWR from "swr";
+import { DynamicFormsElement } from "@/components/documents/dynamic-form";
 
 const DocumentEdit: NextPage = () => {
   const [mainForm] = Form.useForm();
@@ -47,13 +42,12 @@ const DocumentEdit: NextPage = () => {
   );
 
   const onDropdownMenuClick: MenuProps["onClick"] = ({ key }) => {
-    message.info(`Click on item ${key}`);
     let parsedKey = parseInt(key);
     if (dynamicForm[parsedKey]) {
       let newElement = { [parsedKey]: [...dynamicForm[parsedKey], ""] };
       setDynamicForm({ ...dynamicForm, ...newElement });
     } else {
-      let newElement = { [parsedKey]: [""] };
+      let newElement = { [parsedKey]: [] };
       setDynamicForm({ ...dynamicForm, ...newElement });
     }
   };
@@ -75,7 +69,7 @@ const DocumentEdit: NextPage = () => {
     setDynamicForm(tempElement);
     mainForm.setFieldValue("nameField", fetchedDocs?.name);
     //To reset default first field initialValue
-    if (tempElement[1]) mainForm.setFieldValue("1,0", tempElement[1][0]);
+    if (tempElement[1]) mainForm.setFieldValue("1,0", tempElement[1]);
   };
 
   const resetForm = () => {
@@ -122,7 +116,7 @@ const DocumentEdit: NextPage = () => {
               height={100}
               alt="document-icon"
             />
-            <h1>{router.query.id}</h1>
+            <h1>{fetchedDocs?.name}</h1>
             <Popconfirm
               placement="topLeft"
               title={"Delete Document"}
@@ -170,7 +164,10 @@ const DocumentEdit: NextPage = () => {
           >
             <Input placeholder="Name Field" />
           </Form.Item>
-          {DynamicFormsElement(dynamicForm, fetchedCategories)}
+          <DynamicFormsElement
+            dynamicForm={dynamicForm}
+            categories={fetchedCategories}
+          />
         </Form>
         <div className="flex h-40 justify-end items-center gap-2 p-2 rounded-md drop-shadow-md">
           <Tooltip title="save">

@@ -1,5 +1,3 @@
-import { IGetCategories } from "@/actions";
-import { Form, Input } from "antd";
 import { Rule } from "antd/es/form";
 
 export interface IDynamicForm {
@@ -12,65 +10,13 @@ export interface IDynamicFormRules {
   rules: Rule[];
 }
 
-const shouldApplyRule = (
+export const shouldApplyRule = (
   formRule: IDynamicFormRules | undefined,
   currentKey: number,
   currentIndex: number
 ) => {
   if (!formRule) return false;
   return formRule.key === currentKey && formRule.index === currentIndex;
-};
-
-export const DynamicFormsElement = (
-  dynamicForm: IDynamicForm,
-  categories?: IGetCategories,
-  formRule?: IDynamicFormRules
-) => {
-  let nodes = [];
-  for (const key in dynamicForm) {
-    if (Object.prototype.hasOwnProperty.call(dynamicForm, key)) {
-      let parsedKey = parseInt(key);
-      const fields = dynamicForm[parsedKey];
-      const targetCategory = categories?.find(
-        (category) => category?.id === parsedKey
-      );
-
-      nodes.push(
-        <div className="flex flex-col">
-          {fields.map((field, index) => {
-            const rules = shouldApplyRule(formRule, parsedKey, index)
-              ? formRule?.rules
-              : undefined;
-            if (index === 0) {
-              //Key should not be index but i don't know ...
-              return (
-                <Form.Item
-                  label={targetCategory?.name}
-                  name={`${key},${index}`}
-                  key={`${key},${index}`}
-                  initialValue={dynamicForm[parsedKey][index]}
-                  rules={rules}
-                >
-                  <Input placeholder={`Enter ${targetCategory?.name}`} />
-                </Form.Item>
-              );
-            }
-            return (
-              <Form.Item
-                name={`${key},${index}`}
-                key={`${key},${index}`}
-                initialValue={dynamicForm[parsedKey][index]}
-                rules={rules}
-              >
-                <Input placeholder={`Enter ${targetCategory?.name}`} />
-              </Form.Item>
-            );
-          })}
-        </div>
-      );
-    }
-  }
-  return nodes;
 };
 
 export const categoriesformToQueryParser = (
@@ -84,10 +30,22 @@ export const categoriesformToQueryParser = (
       const element = values[key];
       const parsedId = parseInt(key.split(",")[0]);
 
-      tempArry.push({
-        category_id: parsedId,
-        value: element,
-      });
+      //Use for combo box input
+      if (Array.isArray(element)) {
+        element.forEach((e) => {
+          tempArry.push({
+            category_id: parsedId,
+            value: e,
+          });
+        });
+      }
+      //Use for normal input
+      else {
+        tempArry.push({
+          category_id: parsedId,
+          value: element,
+        });
+      }
     }
   }
   return tempArry;
@@ -121,8 +79,6 @@ export const mapPayloadToSearchParams = (
     //@ts-ignore
     searchParams.set(key, values);
   });
-
-  console.log("Search param ", searchParams.toString());
 
   return searchParams;
 };

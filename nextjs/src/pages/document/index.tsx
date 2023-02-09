@@ -6,6 +6,7 @@ import {
   SearchOutlined,
   PlusOutlined,
   QrcodeOutlined,
+  FileOutlined,
 } from "@ant-design/icons";
 import {
   Button,
@@ -28,12 +29,18 @@ import {
 } from "@/actions";
 import { useEffect, useState } from "react";
 import {
-  DynamicFormsElement,
   categoriesformToQueryParser,
   IDynamicForm,
   mapPayloadToSearchParams,
 } from "@/functions/dynamic-form.function";
 import { fetchedCategoryParser } from "@/functions/category.function";
+import { DynamicFormsElement } from "@/components/documents/dynamic-form";
+import {
+  downloadAndOpenFromFileName,
+  downloadDocFromFileName,
+  getFileNamefromPath,
+} from "@/functions/download.function";
+import path from "path";
 
 const DocumentPage: NextPage = () => {
   const [mainForm] = Form.useForm();
@@ -43,13 +50,13 @@ const DocumentPage: NextPage = () => {
     undefined
   );
   const [dynamicForm, setDynamicForm] = useState<IDynamicForm>({
-    1: [""],
+    1: [],
   });
 
-  const { data: fetchedDocs } = useSWR(
-    Object.keys(router.query).length === 0 ? "/query_doc" : null,
-    () => queryInitialDoc()
-  );
+  // const { data: fetchedDocs } = useSWR(
+  //   Object.keys(router.query).length === 0 ? "/query_doc" : null,
+  //   () => queryInitialDoc()
+  // );
 
   const { data: fetchedCategories } = useSWR("/get_category_list", () =>
     getCategories()
@@ -58,20 +65,18 @@ const DocumentPage: NextPage = () => {
   const categories = fetchedCategoryParser(fetchedCategories);
 
   const onDropdownMenuClick: MenuProps["onClick"] = ({ key }) => {
-    message.info(`Click on item ${key}`);
     let parsedKey = parseInt(key);
     if (dynamicForm[parsedKey]) {
       let newElement = { [parsedKey]: [...dynamicForm[parsedKey], ""] };
       setDynamicForm({ ...dynamicForm, ...newElement });
     } else {
-      let newElement = { [parsedKey]: [""] };
+      let newElement = { [parsedKey]: [] };
       setDynamicForm({ ...dynamicForm, ...newElement });
     }
   };
 
   useEffect(() => {
     initialize();
-    console.log("router query ", Object.keys(router.query).length);
   }, [router.query, fetchedCategories]);
 
   const initialize = async () => {
@@ -90,7 +95,7 @@ const DocumentPage: NextPage = () => {
       setDynamicForm(tempElement);
 
       //To reset default first field initialValue
-      if (tempElement[1]) mainForm.setFieldValue("1,0", tempElement[1][0]);
+      if (tempElement[1]) mainForm.setFieldValue("1,0", tempElement[1]);
 
       let queryPayload = dynamicFormToSearchParser(tempElement);
       let data = await queryDoc(queryPayload);
@@ -120,19 +125,27 @@ const DocumentPage: NextPage = () => {
   //but it did not really make any sense
   //so i made the function above to parse the query then fetch instead
   const onFinishMainForm = async (values: any) => {
-    console.log("Main Form Value ", values);
     let queryPayload = categoriesformToQueryParser(values);
     let data = await queryDoc(queryPayload);
-    console.log("Res query", data);
     setSearchedDoc(data);
 
     let searchParam = mapPayloadToSearchParams(queryPayload);
 
-    console.log(searchParam);
     router.push(`/document?${searchParam}`);
   };
 
-  const docs = searchedDoc ?? fetchedDocs;
+  const handleOpen = (path: string) => {
+    const fileName = getFileNamefromPath(path);
+    downloadAndOpenFromFileName(fileName || "");
+  };
+
+  const handleDownloadDoc = (path: string) => {
+    const fileName = getFileNamefromPath(path);
+    downloadDocFromFileName(fileName || "");
+  };
+
+  // const docs = searchedDoc ?? fetchedDocs;
+  const docs = searchedDoc;
 
   const LeftNode = () => {
     return (
@@ -140,19 +153,34 @@ const DocumentPage: NextPage = () => {
         <div className="mt-5" />
         <div className="flex flex-1 flex-col p-5 rounded-md justify-center items-center gap-5 drop-shadow-md">
           <div className="flex h-full flex-col max-h-[75vh] bg-white w-full rounded-md p-5 overflow-y-auto">
-            {docs?.map((e) => (
-              <DocumentItem
-                key={e.id}
-                id={`${e.id}`}
-                name={e.name}
-                onDetailClick={function (id: string): void {
-                  router.push(`/document/details/${id}`);
-                }}
-                onEditClick={function (id: string): void {
-                  router.push(`/document/edit/${id}`);
-                }}
-              />
-            ))}
+            {docs?.length ? (
+              docs?.map((e) => (
+                <DocumentItem
+                  key={e.id}
+                  id={`${e.id}`}
+                  name={e.name}
+                  path={e.path}
+                  type={e.type}
+                  onOpenClick={(path: string) => {
+                    handleOpen(path);
+                  }}
+                  onDetailClick={(id: string) => {
+                    router.push(`/document/details/${id}`);
+                  }}
+                  onEditClick={(id: string) => {
+                    router.push(`/document/edit/${id}`);
+                  }}
+                  onDownloadClick={(path: string) => {
+                    handleDownloadDoc(path);
+                  }}
+                />
+              ))
+            ) : (
+              <div className="w-full h-full flex justify-center items-center">
+                <FileOutlined className="text-2xl text-gray-500" />
+                <h1 className="text-2xl text-gray-500">No document found.</h1>
+              </div>
+            )}
           </div>
         </div>
       </>
@@ -168,7 +196,10 @@ const DocumentPage: NextPage = () => {
           onFinish={(values: any) => onFinishMainForm(values)}
           className="overflow-y-auto h-[2000px] drop-shadow-md"
         >
-          {DynamicFormsElement(dynamicForm, fetchedCategories)}
+          <DynamicFormsElement
+            dynamicForm={dynamicForm}
+            categories={fetchedCategories}
+          />
         </Form>
         <div className="flex h-40 justify-end items-center gap-2 p-2 rounded-md drop-shadow-md">
           <Tooltip title="qr scan">
