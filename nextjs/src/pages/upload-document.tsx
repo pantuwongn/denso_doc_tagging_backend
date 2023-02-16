@@ -19,11 +19,12 @@ import { useState } from "react";
 import {
   formWithNameToQueryParser,
   IDynamicForm,
+  removeFromDynamicForm,
 } from "@/functions/dynamic-form.function";
 import useSWR from "swr";
 import { createDoc, getCategories, uploadDoc } from "@/actions";
 import { fetchedCategoryParser } from "@/functions/category.function";
-import { MAX_FILE_SIZE } from "@/constants";
+import { MAX_FILE_SIZE, REQUIRED_NONMULTIPLE_CATEGORY_KEY } from "@/constants";
 import { bytesToMB } from "@/util/size-converter";
 import { DynamicFormsElement } from "@/components/documents/dynamic-form";
 
@@ -35,7 +36,7 @@ const UploadDocumentPage: NextPage = () => {
   const router = useRouter();
 
   const [dynamicForm, setDynamicForm] = useState<IDynamicForm>({
-    1: [],
+    1: { value: [], required: true },
   });
 
   const { data: fetchedCategories } = useSWR("/get_category_list", () =>
@@ -47,10 +48,20 @@ const UploadDocumentPage: NextPage = () => {
   const onDropdownMenuClick: MenuProps["onClick"] = ({ key }) => {
     let parsedKey = parseInt(key);
     if (dynamicForm[parsedKey]) {
-      let newElement = { [parsedKey]: [...dynamicForm[parsedKey], ""] };
+      let newElement = {
+        [parsedKey]: {
+          value: [...dynamicForm[parsedKey].value, ""],
+          required: parsedKey === REQUIRED_NONMULTIPLE_CATEGORY_KEY,
+        },
+      };
       setDynamicForm({ ...dynamicForm, ...newElement });
     } else {
-      let newElement = { [parsedKey]: [] };
+      let newElement = {
+        [parsedKey]: {
+          value: [],
+          required: parsedKey === REQUIRED_NONMULTIPLE_CATEGORY_KEY,
+        },
+      };
       setDynamicForm({ ...dynamicForm, ...newElement });
     }
   };
@@ -72,9 +83,17 @@ const UploadDocumentPage: NextPage = () => {
     setFile(selectedFile);
   };
 
+  const handleRemoveDynamicFormElement = (key: number) => {
+    setDynamicForm(removeFromDynamicForm(key, dynamicForm));
+  };
+
   const onFinishMainForm = async (values: any) => {
     if (!file) {
       message.error("Please upload file first");
+      return;
+    }
+    if (!mainForm.getFieldValue(REQUIRED_NONMULTIPLE_CATEGORY_KEY).length) {
+      message.error("Please fill the required form first");
       return;
     }
     let formData = new FormData();
@@ -160,6 +179,9 @@ const UploadDocumentPage: NextPage = () => {
             dynamicForm={dynamicForm}
             categories={fetchedCategories}
             formRule={uploadFormRules}
+            onRemoveElementClick={(key: number) =>
+              handleRemoveDynamicFormElement(key)
+            }
             selectKey={[1]}
           />
         </Form>

@@ -1,7 +1,10 @@
 import { Rule } from "antd/es/form";
 
 export interface IDynamicForm {
-  [key: number]: string[];
+  [key: number]: {
+    value: string[];
+    required: boolean;
+  };
 }
 
 export interface IDynamicFormRules {
@@ -81,4 +84,13 @@ export const mapPayloadToSearchParams = (
   });
 
   return searchParams;
+};
+
+export const removeFromDynamicForm = (
+  key: number,
+  dynamicForm: IDynamicForm
+) => {
+  let result = { ...dynamicForm };
+  delete result[key];
+  return result;
 };

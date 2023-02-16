@@ -8,9 +8,8 @@ export const fetchedCategoryParser = (
   if (!categories) return [];
 
   let enabledCategories = categories.filter(
-    (category) =>
-      category.enable === true &&
-      category.name !== REQUIRED_NONMULTIPLE_CATEGORY
+    (category) => category.enable === true
+    //&& category.name !== REQUIRED_NONMULTIPLE_CATEGORY
   );
 
   return enabledCategories?.map((category) => {

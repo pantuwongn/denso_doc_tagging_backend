@@ -121,7 +121,7 @@ const DocumentDetails: NextPage = () => {
               }}
             />
           </Tooltip>
-          <Tooltip title="qr scan">
+          <Tooltip title="QR Code">
             <Button
               shape="circle"
               icon={<QrcodeOutlined />}
@@ -147,9 +147,10 @@ const DocumentDetails: NextPage = () => {
         <Modal
           title="QR Code"
           open={isQRModalOpen}
-          onOk={() => {
+          onCancel={() => {
             setIsQRModalOpen(false);
           }}
+          footer={null}
           className="flex justify-center"
           cancelButtonProps={{ hidden: true }}
         >
