@@ -187,7 +187,7 @@ async def query_doc(query_list: List[DocumentQuery], session: AsyncSession = Dep
             final_set = set(doc_id_list_per_category[category_id])
         else:
             final_set = final_set & set(doc_id_list_per_category[category_id])
-
+    returnList = []
     for doc_id in final_set:
         doc_obj = await session.get(Document, doc_id)
         if not doc_obj:
