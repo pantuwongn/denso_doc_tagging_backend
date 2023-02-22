@@ -26,7 +26,7 @@ import { fetchedCategoryParser } from "@/functions/category.function";
 import { deleteDoc, getCategories, getDocById, updateDoc } from "@/actions";
 import useSWR from "swr";
 import { DynamicFormsElement } from "@/components/documents/dynamic-form";
-import { REQUIRED_NONMULTIPLE_CATEGORY_KEY } from "@/constants";
+import { REQUIRED_NONMULTIPLE_CATEGORY_KEY, SINGLE_VALUE_KEY } from "@/constants";
 
 const DocumentEdit: NextPage = () => {
   const [mainForm] = Form.useForm();
@@ -50,6 +50,7 @@ const DocumentEdit: NextPage = () => {
         [parsedKey]: {
           value: [...dynamicForm[parsedKey].value, ""],
           required: parsedKey === REQUIRED_NONMULTIPLE_CATEGORY_KEY,
+          isSingle: parsedKey === SINGLE_VALUE_KEY
         },
       };
       setDynamicForm({ ...dynamicForm, ...newElement });
@@ -58,6 +59,7 @@ const DocumentEdit: NextPage = () => {
         [parsedKey]: {
           value: [],
           required: parsedKey === REQUIRED_NONMULTIPLE_CATEGORY_KEY,
+          isSingle: parsedKey === SINGLE_VALUE_KEY
         },
       };
       setDynamicForm({ ...dynamicForm, ...newElement });
@@ -72,13 +74,14 @@ const DocumentEdit: NextPage = () => {
         const newValue = {
           [category_id]: {
             value: [...tempElement[category_id].value, value],
-            required: category_id === 1,
+            required: category_id === REQUIRED_NONMULTIPLE_CATEGORY_KEY,
+            isSingle: category_id === SINGLE_VALUE_KEY
           },
         };
         tempElement = { ...tempElement, ...newValue };
       } else {
         const newValue = {
-          [category_id]: { value: [value], required: category_id === 1 },
+          [category_id]: { value: [value], required: category_id === REQUIRED_NONMULTIPLE_CATEGORY_KEY, isSingle: category_id === SINGLE_VALUE_KEY },
         };
         tempElement = { ...tempElement, ...newValue };
       }

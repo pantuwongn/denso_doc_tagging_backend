@@ -44,6 +44,7 @@ import {
 } from "@/functions/download.function";
 import { MdSearchOff } from "react-icons/md";
 import { BrowserQRCodeReader } from "@zxing/browser";
+import { SINGLE_VALUE_KEY } from "@/constants";
 
 const DocumentPage: NextPage = () => {
   const [mainForm] = Form.useForm();
@@ -70,16 +71,18 @@ const DocumentPage: NextPage = () => {
 
   const onDropdownMenuClick: MenuProps["onClick"] = ({ key }) => {
     let parsedKey = parseInt(key);
+    
     if (dynamicForm[parsedKey]) {
       let newElement = {
         [parsedKey]: {
           value: [...dynamicForm[parsedKey].value, ""],
           required: false,
+          isSingle: parsedKey === SINGLE_VALUE_KEY,
         },
       };
       setDynamicForm({ ...dynamicForm, ...newElement });
     } else {
-      let newElement = { [parsedKey]: { value: [], required: false } };
+      let newElement = { [parsedKey]: { value: [], required: false, isSingle: parsedKey === SINGLE_VALUE_KEY } };
       setDynamicForm({ ...dynamicForm, ...newElement });
     }
   };
@@ -96,7 +99,7 @@ const DocumentPage: NextPage = () => {
           let parsedKey = parseInt(key);
           let param = (router.query[key] as string).split(",");
           let newElement = {
-            [parsedKey]: { value: param, required: false },
+            [parsedKey]: { value: param, required: false, isSingle: parsedKey === SINGLE_VALUE_KEY },
           };
           tempElement = { ...tempElement, ...newElement };
         }
@@ -145,6 +148,11 @@ const DocumentPage: NextPage = () => {
   };
 
   const onFinishMainForm = async (values: any) => {
+    if(!Object.keys(dynamicForm).length) {
+      message.info("Please add some catogories before trying to search!")
+      return
+    }
+
     let queryPayload = categoriesformToQueryParser(values);
     let data = await queryDoc(queryPayload);
     setSearchedDoc(data);

@@ -1,11 +1,11 @@
-import { IGetCategories } from "@/actions";
+import { IGetCategories } from '@/actions';
 import {
   IDynamicForm,
   IDynamicFormRules,
   shouldApplyRule,
-} from "@/functions/dynamic-form.function";
-import { Button, Form, Select } from "antd";
-import TruncateTag from "../tags/truncate-tag";
+} from '@/functions/dynamic-form.function';
+import { Button, Form, Input, Select } from 'antd';
+import TruncateTag from '../tags/truncate-tag';
 
 interface IProps {
   dynamicForm: IDynamicForm;
@@ -30,6 +30,9 @@ export const DynamicFormsElement = ({
         (category) => category?.id === parsedKey
       );
 
+      console.log("IS single here? ", dynamicForm[parsedKey]);
+      
+
       nodes.push(
         <div className="flex items-center">
           <Form.Item
@@ -39,15 +42,21 @@ export const DynamicFormsElement = ({
             initialValue={dynamicForm[parsedKey].value}
             className="flex-1"
           >
-            <Select
-              mode="tags"
-              style={{ width: "100%" }}
-              placeholder={targetCategory?.name}
-              options={[{ label: `Please enter your ${targetCategory?.name}` }]}
-              dropdownRender={(menu) => <>{menu}</>}
-              className="flex-1"
-              tagRender={TruncateTag}
-            />
+            {dynamicForm[parsedKey].isSingle ? (
+              <Input placeholder={`Enter ${targetCategory?.name}`} />
+            ) : (
+              <Select
+                mode="tags"
+                style={{ width: '100%' }}
+                placeholder={targetCategory?.name}
+                options={[
+                  { label: `Please enter your ${targetCategory?.name}` },
+                ]}
+                dropdownRender={(menu) => <>{menu}</>}
+                className="flex-1"
+                tagRender={TruncateTag}
+              />
+            )}
           </Form.Item>
           {!dynamicForm[parsedKey].required && onRemoveElementClick && (
             <Button

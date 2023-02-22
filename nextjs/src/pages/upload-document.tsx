@@ -24,7 +24,7 @@ import {
 import useSWR from "swr";
 import { createDoc, getCategories, uploadDoc } from "@/actions";
 import { fetchedCategoryParser } from "@/functions/category.function";
-import { MAX_FILE_SIZE, REQUIRED_NONMULTIPLE_CATEGORY_KEY } from "@/constants";
+import { MAX_FILE_SIZE, REQUIRED_NONMULTIPLE_CATEGORY_KEY, SINGLE_VALUE_KEY } from "@/constants";
 import { bytesToMB } from "@/util/size-converter";
 import { DynamicFormsElement } from "@/components/documents/dynamic-form";
 
@@ -36,7 +36,7 @@ const UploadDocumentPage: NextPage = () => {
   const router = useRouter();
 
   const [dynamicForm, setDynamicForm] = useState<IDynamicForm>({
-    1: { value: [], required: true },
+    1: { value: [], required: true, isSingle: true },
   });
 
   const { data: fetchedCategories } = useSWR("/get_category_list", () =>
@@ -52,6 +52,7 @@ const UploadDocumentPage: NextPage = () => {
         [parsedKey]: {
           value: [...dynamicForm[parsedKey].value, ""],
           required: parsedKey === REQUIRED_NONMULTIPLE_CATEGORY_KEY,
+          isSingle: parsedKey === SINGLE_VALUE_KEY
         },
       };
       setDynamicForm({ ...dynamicForm, ...newElement });
@@ -60,6 +61,7 @@ const UploadDocumentPage: NextPage = () => {
         [parsedKey]: {
           value: [],
           required: parsedKey === REQUIRED_NONMULTIPLE_CATEGORY_KEY,
+          isSingle: parsedKey === SINGLE_VALUE_KEY
         },
       };
       setDynamicForm({ ...dynamicForm, ...newElement });
@@ -104,7 +106,7 @@ const UploadDocumentPage: NextPage = () => {
     await createDoc(queryPayload);
     message.info("You have sucessfully created the document!");
 
-    router.push({ pathname: "/document" });
+    router.push({ pathname: "/home" });
   };
 
   const LeftNode = () => {
@@ -149,7 +151,7 @@ const UploadDocumentPage: NextPage = () => {
   const uploadFormRules = {
     key: 1,
     index: 0,
-    rules: [{ required: true, message: "Please input your name field" }],
+    rules: [{ required: true ,message: "Please input your name field" }],
   };
 
   const RightNode = () => {

@@ -13,14 +13,12 @@ import {
   Dropdown,
   Form,
   MenuProps,
-  message,
   QRCode,
   Tooltip,
 } from "antd";
 import { useRouter } from "next/router";
 import {
   categoriesformToQueryParser,
-  // DynamicFormsElement,
   IDynamicForm,
   mapPayloadToSearchParams,
   removeFromDynamicForm,
@@ -29,9 +27,10 @@ import { useState } from "react";
 import { getCategories } from "@/actions";
 import useSWR from "swr";
 import { fetchedCategoryParser } from "@/functions/category.function";
-import { generateCurrentPathToQR } from "@/functions/qr-code.function";
+import { copyQRCodeToClipboard, downloadQRCode, generateCurrentPathToQR } from "@/functions/qr-code.function";
 import { DynamicFormsElement } from "@/components/documents/dynamic-form";
 import { BsLayoutTextWindowReverse } from "react-icons/bs";
+import { SINGLE_VALUE_KEY } from "@/constants";
 
 const DocumentQRPage: NextPage = () => {
   const [mainForm] = Form.useForm();
@@ -54,11 +53,12 @@ const DocumentQRPage: NextPage = () => {
         [parsedKey]: {
           value: [...dynamicForm[parsedKey].value, ""],
           required: false,
+          isSingle: parsedKey === SINGLE_VALUE_KEY
         },
       };
       setDynamicForm({ ...dynamicForm, ...newElement });
     } else {
-      let newElement = { [parsedKey]: { value: [], required: false } };
+      let newElement = { [parsedKey]: { value: [], required: false, isSingle: parsedKey === SINGLE_VALUE_KEY } };
       setDynamicForm({ ...dynamicForm, ...newElement });
     }
   };
@@ -76,77 +76,6 @@ const DocumentQRPage: NextPage = () => {
     setDynamicForm(removeFromDynamicForm(key, dynamicForm));
   };
 
-  const copyQRCodeToClipboard = () => {
-    if (currentQRPath === "") {
-      message.error("Please generate QR Code First!");
-      return;
-    }
-
-    const canvas = document
-      .getElementsByClassName("ant-qrcode")[0]
-      ?.querySelector<HTMLCanvasElement>("canvas");
-
-    if (canvas) {
-      const ctx = canvas.getContext("2d");
-      const imageData = ctx!.getImageData(0, 0, canvas.width, canvas.height);
-      const data = imageData.data;
-      for (let i = 0; i < data.length; i += 4) {
-        data[i] = 255 - data[i];
-        data[i + 1] = 255 - data[i + 1];
-        data[i + 2] = 255 - data[i + 2];
-      }
-      ctx?.putImageData(imageData, 0, 0);
-
-      canvas.toBlob(function (blob) {
-        if (!blob) {
-          message.error("Blob error!");
-          return;
-        }
-        const item = new ClipboardItem({ "image/png": blob });
-        navigator.clipboard.write([item]).then(() => {
-          message.info("QRCode has been copied to clipboard!");
-
-          const ctx = canvas.getContext("2d");
-          const imageData = ctx!.getImageData(
-            0,
-            0,
-            canvas.width,
-            canvas.height
-          );
-          const data = imageData.data;
-          for (let i = 0; i < data.length; i += 4) {
-            data[i] = 255 - data[i];
-            data[i + 1] = 255 - data[i + 1];
-            data[i + 2] = 255 - data[i + 2];
-          }
-          ctx?.putImageData(imageData, 0, 0);
-        });
-      });
-    }
-  };
-
-  const downloadQRCode = () => {
-    if (currentQRPath === "") {
-      message.error("Please generate QR Code First!");
-      return;
-    }
-    const canvas = document
-      .getElementsByClassName("ant-qrcode")[0]
-      ?.querySelector<HTMLCanvasElement>("canvas");
-
-    console.log("Canvas ", canvas);
-
-    if (canvas) {
-      const url = canvas.toDataURL();
-      const a = document.createElement("a");
-      a.download = "QRCode.png";
-      a.href = url;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    }
-  };
-
   const LeftNode = () => {
     return (
       <>
@@ -154,7 +83,11 @@ const DocumentQRPage: NextPage = () => {
         <div className="flex flex-1 flex-col p-5 rounded-md justify-center items-center gap-5 drop-shadow-md">
           <div className="flex flex-1 flex-col max-h-[75vh] bg-white w-full rounded-md gap-5 overflow-y-auto justify-center items-center p-5">
             {Object.keys(dynamicForm).length > 0 && (
-              <QRCode value={currentQRPath || ""} />
+              <QRCode value={currentQRPath || ""}
+                size={256}
+                icon="/denso_icon.jpg"
+                color="#EE1C29"
+              />
             )}
             <h1>{router.query.id}</h1>
             <div className="flex flex-shrink bg-white w-full rounded-md gap-5 justify-center p-5">
@@ -165,7 +98,7 @@ const DocumentQRPage: NextPage = () => {
                     icon={<CopyOutlined />}
                     size={"large"}
                     onClick={() => {
-                      copyQRCodeToClipboard();
+                      copyQRCodeToClipboard(currentQRPath);
                     }}
                   >
                     Copy To Clipboard
@@ -176,7 +109,7 @@ const DocumentQRPage: NextPage = () => {
                     icon={<DownloadOutlined />}
                     size={"large"}
                     onClick={() => {
-                      downloadQRCode();
+                      downloadQRCode(currentQRPath);
                     }}
                   >
                     Download
@@ -204,7 +137,6 @@ const DocumentQRPage: NextPage = () => {
           className="overflow-y-auto h-[2000px] drop-shadow-md"
           onFinish={(values) => onFinishMainForm(values)}
         >
-          {/* {DynamicFormsElement(dynamicForm, fetchedCategories)} */}
           <DynamicFormsElement
             dynamicForm={dynamicForm}
             categories={fetchedCategories}
