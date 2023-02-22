@@ -6,7 +6,7 @@ from starlette.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import func
-from sqlmodel import select, and_, col
+from sqlmodel import select, and_
 from typing import List, Dict
 from app.db import get_session
 from app.models import Document, DocumentRead, DocumentCreate, DocumentUpdate, \
@@ -153,29 +153,42 @@ async def get_doc(doc_id: int, session: AsyncSession = Depends(get_session)):
 
 @app.post("/api/query_doc", dependencies=[Depends(api_key_auth)], response_model=List[DocumentRead])
 async def query_doc(query_list: List[DocumentQuery], session: AsyncSession = Depends(get_session)):
+    # get categories
+    statement = select(Category)
+    results = await session.execute(statement)
+    category_dict = {}
+    for res in results:
+        category_dict[res[0].id] = res[0].enable
+
     statement = select(DocumentCategory)
     results = await session.execute(statement)
-    final_doc_id_list = []
-    for res in results:
-        final_doc_id_list.append(res[0].document_id)
+
+    doc_id_list_per_category = {}
     for query in query_list:
-        if not query.value.strip():
+        if not category_dict[query.category_id]:
             continue
-        q = and_(DocumentCategory.category_id == query.category_id, DocumentCategory.value.ilike('%'+ query.value + '%'))
+        if not query.value.strip():
+            q = and_(DocumentCategory.category_id == query.category_id)
+        else:
+            q = and_(DocumentCategory.category_id == query.category_id, DocumentCategory.value.ilike('%'+ query.value + '%'))
         statement = select(DocumentCategory).where(q)
         results = await session.execute(statement)
         doc_id_list = []
         for res in results:
             doc_id_list.append(res[0].document_id)
-        if len(final_doc_id_list) == 0:
-            intersect = doc_id_list
+        if query.category_id not in doc_id_list_per_category:
+            doc_id_list_per_category[query.category_id] = doc_id_list
         else:
-            intersect = [value for value in doc_id_list if value in final_doc_id_list]
-        final_doc_id_list = intersect
+            doc_id_list_per_category[query.category_id].extend(doc_id_list)
 
+    final_set = {}
+    for category_id in doc_id_list_per_category:
+        if len(final_set) == 0:
+            final_set = set(doc_id_list_per_category[category_id])
+        else:
+            final_set = final_set & set(doc_id_list_per_category[category_id])
     returnList = []
-    doc_id_set = set(final_doc_id_list)
-    for doc_id in doc_id_set:
+    for doc_id in final_set:
         doc_obj = await session.get(Document, doc_id)
         if not doc_obj:
             continue
