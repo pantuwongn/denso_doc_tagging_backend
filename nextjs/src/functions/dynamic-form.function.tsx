@@ -1,7 +1,11 @@
-import { Rule } from "antd/es/form";
+import { Rule } from 'antd/es/form';
 
 export interface IDynamicForm {
-  [key: number]: string[];
+  [key: number]: {
+    value: string[];
+    required: boolean;
+    isSingle?: boolean;
+  };
 }
 
 export interface IDynamicFormRules {
@@ -28,7 +32,7 @@ export const categoriesformToQueryParser = (
     if (Object.prototype.hasOwnProperty.call(values, key)) {
       if (skipKey?.includes(key)) continue;
       const element = values[key];
-      const parsedId = parseInt(key.split(",")[0]);
+      const parsedId = parseInt(key.split(',')[0]);
 
       //Use for combo box input
       if (Array.isArray(element)) {
@@ -56,9 +60,9 @@ export const formWithNameToQueryParser = (
   filetype: string,
   uploadPath: string
 ) => {
-  let categories = categoriesformToQueryParser(values, ["nameField"]);
+  let categories = categoriesformToQueryParser(values, ['nameField']);
   let payload = {
-    name: values["nameField"],
+    name: values['nameField'],
     type: filetype,
     path: uploadPath,
     categories: categories,
@@ -81,4 +85,13 @@ export const mapPayloadToSearchParams = (
   });
 
   return searchParams;
+};
+
+export const removeFromDynamicForm = (
+  key: number,
+  dynamicForm: IDynamicForm
+) => {
+  let result = { ...dynamicForm };
+  delete result[key];
+  return result;
 };

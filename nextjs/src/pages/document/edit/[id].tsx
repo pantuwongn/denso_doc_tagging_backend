@@ -20,11 +20,13 @@ import { useEffect, useState } from "react";
 import {
   categoriesformToQueryParser,
   IDynamicForm,
+  removeFromDynamicForm,
 } from "@/functions/dynamic-form.function";
 import { fetchedCategoryParser } from "@/functions/category.function";
 import { deleteDoc, getCategories, getDocById, updateDoc } from "@/actions";
 import useSWR from "swr";
 import { DynamicFormsElement } from "@/components/documents/dynamic-form";
+import { REQUIRED_NONMULTIPLE_CATEGORY_KEY, SINGLE_VALUE_KEY } from "@/constants";
 
 const DocumentEdit: NextPage = () => {
   const [mainForm] = Form.useForm();
@@ -44,10 +46,22 @@ const DocumentEdit: NextPage = () => {
   const onDropdownMenuClick: MenuProps["onClick"] = ({ key }) => {
     let parsedKey = parseInt(key);
     if (dynamicForm[parsedKey]) {
-      let newElement = { [parsedKey]: [...dynamicForm[parsedKey], ""] };
+      let newElement = {
+        [parsedKey]: {
+          value: [...dynamicForm[parsedKey].value, ""],
+          required: parsedKey === REQUIRED_NONMULTIPLE_CATEGORY_KEY,
+          isSingle: parsedKey === SINGLE_VALUE_KEY
+        },
+      };
       setDynamicForm({ ...dynamicForm, ...newElement });
     } else {
-      let newElement = { [parsedKey]: [] };
+      let newElement = {
+        [parsedKey]: {
+          value: [],
+          required: parsedKey === REQUIRED_NONMULTIPLE_CATEGORY_KEY,
+          isSingle: parsedKey === SINGLE_VALUE_KEY
+        },
+      };
       setDynamicForm({ ...dynamicForm, ...newElement });
     }
   };
@@ -58,25 +72,31 @@ const DocumentEdit: NextPage = () => {
     fetchedDocs?.categories.forEach(({ category_id, value }) => {
       if (tempElement[category_id]) {
         const newValue = {
-          [category_id]: [...tempElement[category_id], value],
+          [category_id]: {
+            value: [...tempElement[category_id].value, value],
+            required: category_id === REQUIRED_NONMULTIPLE_CATEGORY_KEY,
+            isSingle: category_id === SINGLE_VALUE_KEY
+          },
         };
         tempElement = { ...tempElement, ...newValue };
       } else {
-        const newValue = { [category_id]: [value] };
+        const newValue = {
+          [category_id]: { value: [value], required: category_id === REQUIRED_NONMULTIPLE_CATEGORY_KEY, isSingle: category_id === SINGLE_VALUE_KEY },
+        };
         tempElement = { ...tempElement, ...newValue };
       }
     });
     setDynamicForm(tempElement);
     mainForm.setFieldValue("nameField", fetchedDocs?.name);
     //To reset default first field initialValue
-    if (tempElement[1]) mainForm.setFieldValue("1,0", tempElement[1]);
+    if (tempElement[1]) mainForm.setFieldValue("1", tempElement[1].value);
   };
 
   const resetForm = () => {
     applyInitialValue();
     for (const key in dynamicForm) {
       if (Object.prototype.hasOwnProperty.call(dynamicForm, key)) {
-        dynamicForm[key].forEach((element, index) => {
+        dynamicForm[key].value.forEach((element, index) => {
           mainForm.setFieldValue(`${key},${index}`, element);
         });
       }
@@ -102,6 +122,11 @@ const DocumentEdit: NextPage = () => {
     await deleteDoc(parseInt(id as string));
     await router.push("/document");
     message.success("Successfully Delete!");
+  };
+
+  const handleRemoveDynamicFormElement = (key: number) => {
+    console.log("New dynamic form ", removeFromDynamicForm(key, dynamicForm));
+    setDynamicForm(removeFromDynamicForm(key, dynamicForm));
   };
 
   const LeftNode = () => {
@@ -167,6 +192,9 @@ const DocumentEdit: NextPage = () => {
           <DynamicFormsElement
             dynamicForm={dynamicForm}
             categories={fetchedCategories}
+            onRemoveElementClick={(key: number) => {
+              handleRemoveDynamicFormElement(key);
+            }}
           />
         </Form>
         <div className="flex h-40 justify-end items-center gap-2 p-2 rounded-md drop-shadow-md">

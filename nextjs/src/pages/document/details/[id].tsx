@@ -6,6 +6,7 @@ import {
   QrcodeOutlined,
   EditOutlined,
   DownloadOutlined,
+  CopyOutlined,
 } from "@ant-design/icons";
 import {
   Button,
@@ -25,7 +26,7 @@ import { downloadDoc, getCategories, getDocById } from "@/actions";
 import { IDynamicForm } from "@/functions/dynamic-form.function";
 import { useEffect, useState } from "react";
 import DynamicTag, { IDynamicTag } from "@/components/documents/dynamic-tag";
-import { generateCurrentPathToQR } from "@/functions/qr-code.function";
+import { copyQRCodeToClipboard, downloadQRCode, generateCurrentPathToQR } from "@/functions/qr-code.function";
 import {
   downloadDocFromFileName,
   getFileNamefromPath,
@@ -121,7 +122,7 @@ const DocumentDetails: NextPage = () => {
               }}
             />
           </Tooltip>
-          <Tooltip title="qr scan">
+          <Tooltip title="QR Code">
             <Button
               shape="circle"
               icon={<QrcodeOutlined />}
@@ -147,13 +148,45 @@ const DocumentDetails: NextPage = () => {
         <Modal
           title="QR Code"
           open={isQRModalOpen}
-          onOk={() => {
+          onCancel={() => {
             setIsQRModalOpen(false);
           }}
+          footer={null}
           className="flex justify-center"
           cancelButtonProps={{ hidden: true }}
         >
-          <QRCode value={generateCurrentPathToQR(router.asPath)} />
+
+          <div className="flex flex-1 flex-col max-h-[75vh] bg-white w-full rounded-md gap-5 overflow-y-auto justify-center items-center p-5">
+            <QRCode value={generateCurrentPathToQR(router.asPath)} 
+              size={256}
+              icon="/denso_icon.jpg"
+              color="#EE1C29"
+            />
+          </div>
+
+          <div className="flex flex-shrink bg-white w-full rounded-md gap-5 justify-center p-5">
+            <Button
+              type="default"
+              icon={<CopyOutlined />}
+              size={"large"}
+              onClick={() => {
+                copyQRCodeToClipboard(generateCurrentPathToQR(router.asPath));
+              }}
+            >
+                    Copy To Clipboard
+            </Button>
+
+            <Button
+              type="default"
+              icon={<DownloadOutlined />}
+              size={"large"}
+              onClick={() => {
+                downloadQRCode(generateCurrentPathToQR(router.asPath));
+              }}
+            >
+                    Download
+            </Button>
+          </div>
         </Modal>
 
         <HorizontalSplitLayout
