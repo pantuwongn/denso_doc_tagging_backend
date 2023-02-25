@@ -162,12 +162,18 @@ async def query_doc(query_list: List[DocumentQuery], session: AsyncSession = Dep
 
     statement = select(DocumentCategory)
     results = await session.execute(statement)
+    all_doc_id_list = []
+    for res in results:
+        all_doc_id_list.append(res[0].document_id)
 
     doc_id_list_per_category = {}
+    all_query_empty = True
     for query in query_list:
-        if not category_dict[query.category_id]:
-            continue
         if not query.value.strip():
+            continue
+        else:
+            all_query_empty = False
+        if not category_dict[query.category_id]:
             continue
 
         q = and_(DocumentCategory.category_id == query.category_id, DocumentCategory.value.ilike('%'+ query.value + '%'))
@@ -180,13 +186,15 @@ async def query_doc(query_list: List[DocumentQuery], session: AsyncSession = Dep
             doc_id_list_per_category[query.category_id] = doc_id_list
         else:
             doc_id_list_per_category[query.category_id].extend(doc_id_list)
-
-    final_set = {}
-    for category_id in doc_id_list_per_category:
-        if len(final_set) == 0:
-            final_set = set(doc_id_list_per_category[category_id])
-        else:
-            final_set = final_set.intersection(set(doc_id_list_per_category[category_id]))
+    if all_query_empty:
+        final_set = set(all_doc_id_list)
+    else:
+        final_set = {}
+        for category_id in doc_id_list_per_category:
+            if len(final_set) == 0:
+                final_set = set(doc_id_list_per_category[category_id])
+            else:
+                final_set = final_set.intersection(set(doc_id_list_per_category[category_id]))
     returnList = []
     for doc_id in final_set:
         doc_obj = await session.get(Document, doc_id)
