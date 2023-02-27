@@ -45,10 +45,12 @@ import {
 import { MdSearchOff } from "react-icons/md";
 import { BrowserQRCodeReader } from "@zxing/browser";
 import { SINGLE_VALUE_KEY } from "@/constants";
+import { useLayoutStore } from "@/store/layout.store";
 
 const DocumentPage: NextPage = () => {
   const [mainForm] = Form.useForm();
   const router = useRouter();
+  const { setIsSearch } = useLayoutStore();
 
   const [searchedDoc, setSearchedDoc] = useState<IQueryDoc | undefined>(
     undefined
@@ -92,6 +94,10 @@ const DocumentPage: NextPage = () => {
       setDynamicForm({ ...dynamicForm, ...newElement });
     }
   };
+
+  useEffect(() => {
+    setIsSearch(true)
+  }, [setIsSearch])
 
   useEffect(() => {
     initialize();
@@ -234,7 +240,7 @@ const DocumentPage: NextPage = () => {
                 <DocumentItem
                   key={e.id}
                   id={`${e.id}`}
-                  name={e.name}
+                  document={e}
                   path={e.path}
                   type={e.type}
                   onOpenClick={(path: string) => {

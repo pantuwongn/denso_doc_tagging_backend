@@ -4,20 +4,21 @@ import { AiOutlineArrowLeft } from 'react-icons/ai'
 
 interface IProps {
   title: string
+  query?: string
   backable?: boolean
   backRoute?: string
 }
 
-const Header: FC<IProps> = ({ title, backable, backRoute }: IProps) => {
+const Header: FC<IProps> = ({ title, query, backable, backRoute }: IProps) => {
   const router = useRouter()
 
   const handleBackClick = useCallback(() => {
     if (backRoute) {
-      router.replace({ pathname: backRoute })
+      router.replace({ pathname: backRoute, query })
     } else {
       router.back()
     }
-  }, [backRoute, router])
+  }, [backRoute, router, query])
   return (
     <>
       <div className="w-full flex justify-between items-center p-4 shadow shadow-zinc-500">

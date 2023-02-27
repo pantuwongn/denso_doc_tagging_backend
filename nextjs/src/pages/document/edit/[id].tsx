@@ -141,7 +141,7 @@ const DocumentEdit: NextPage = () => {
               height={100}
               alt="document-icon"
             />
-            <h1>{fetchedDocs?.name}</h1>
+            {`${fetchedDocs?.name}.${fetchedDocs?.path.split(".")[fetchedDocs.path.split(".").length - 1]}`}
             <Popconfirm
               placement="topLeft"
               title={"Delete Document"}
@@ -198,7 +198,7 @@ const DocumentEdit: NextPage = () => {
           />
         </Form>
         <div className="flex h-40 justify-end items-center gap-2 p-2 rounded-md drop-shadow-md">
-          <Tooltip title="save">
+          <Tooltip title="Save">
             <Button
               shape="circle"
               icon={<SaveOutlined />}
@@ -207,7 +207,7 @@ const DocumentEdit: NextPage = () => {
               }}
             />
           </Tooltip>
-          <Tooltip title="discard">
+          <Tooltip title="Discard">
             <Button
               shape="circle"
               icon={<DeleteOutlined />}

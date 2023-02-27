@@ -7,10 +7,11 @@ import {
   FolderOpenOutlined,
 } from "@ant-design/icons";
 import { Button, Space, Tooltip } from "antd";
+import { IDoc } from "@/actions";
 
 interface IProps {
   id: string;
-  name: string;
+  document: IDoc;
   path: string;
   type: string;
   onOpenClick: (id: string) => void;
@@ -21,7 +22,7 @@ interface IProps {
 
 export default function DocumentItem({
   id,
-  name,
+  document,
   path,
   type,
   onOpenClick,
@@ -33,7 +34,7 @@ export default function DocumentItem({
     <div className="flex justify-around space-y-5">
       <Space className="flex-1">
         <FileTextOutlined />
-        <h1>{name}</h1>
+        <h1>{`${document?.name}.${document?.path.split(".")[document.path.split(".").length - 1]}`}</h1>
       </Space>
       <Space>
         <Tooltip title="View PDF">

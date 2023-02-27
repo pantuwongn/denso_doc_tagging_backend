@@ -16,7 +16,7 @@ const Home: NextPage = () => {
         title="Document Tagging"
         className="flex flex-col justify-center items-center"
       >
-        <Link href="/document">
+        <Link href="/document?1=">
           <div className="text-xl my-2 cursor-pointer animate__animated animate__fadeInUp">
             Search Document
           </div>

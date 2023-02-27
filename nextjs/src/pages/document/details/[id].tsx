@@ -7,6 +7,7 @@ import {
   EditOutlined,
   DownloadOutlined,
   CopyOutlined,
+  FolderOpenOutlined,
 } from "@ant-design/icons";
 import {
   Button,
@@ -28,12 +29,15 @@ import { useEffect, useState } from "react";
 import DynamicTag, { IDynamicTag } from "@/components/documents/dynamic-tag";
 import { copyQRCodeToClipboard, downloadQRCode, generateCurrentPathToQR } from "@/functions/qr-code.function";
 import {
+  downloadAndOpenFromFileName,
   downloadDocFromFileName,
   getFileNamefromPath,
 } from "@/functions/download.function";
+import { useLayoutStore } from "@/store/layout.store";
 
 const DocumentDetails: NextPage = () => {
   const router = useRouter();
+  const { isSearch } = useLayoutStore();
   const { id } = router.query;
 
   const { data: fetchedDocs } = useSWR(id ?? null, (id: number) =>
@@ -71,6 +75,13 @@ const DocumentDetails: NextPage = () => {
   const gotoEditPage = (id: string) => {
     router.push(`/document/edit/${id}`);
   };
+
+  const handleOpen = (path: string) => {
+    const fileName = getFileNamefromPath(path);
+    downloadAndOpenFromFileName(fileName || "");
+  };
+
+  const backRoute = isSearch ? undefined : '/document'
 
   const LeftNode = () => {
     return (
@@ -114,7 +125,15 @@ const DocumentDetails: NextPage = () => {
         </div>
 
         <div className="flex h-40 justify-end items-center gap-2 p-2 rounded-md drop-shadow-md">
-          <Tooltip title="edit">
+          <Tooltip title="View PDF">
+            <Button
+              icon={<FolderOpenOutlined />}
+              onClick={() => {
+                handleOpen(fetchedDocs?.path ?? '');
+              }}
+            />
+          </Tooltip>
+          <Tooltip title="Edit">
             <Button
               shape="circle"
               icon={<EditOutlined />}
@@ -145,7 +164,7 @@ const DocumentDetails: NextPage = () => {
           <link rel="icon" href="/favicon.ico" />
         </Head>
       </div>
-      <Container title="Document Details" backRoute="/document" backable>
+      <Container title="Document Details" backRoute={backRoute} query={'1='} backable>
         <Modal
           title="QR Code"
           open={isQRModalOpen}
@@ -158,7 +177,7 @@ const DocumentDetails: NextPage = () => {
         >
 
           <div className="flex flex-1 flex-col max-h-[75vh] bg-white w-full rounded-md gap-5 overflow-y-auto justify-center items-center p-5">
-            <QRCode value={generateCurrentPathToQR(router.asPath)} 
+            <QRCode value={generateCurrentPathToQR(router.asPath)}
               size={256}
               icon="/denso_icon.jpg"
               color="#EE1C29"
@@ -174,7 +193,7 @@ const DocumentDetails: NextPage = () => {
                 copyQRCodeToClipboard(generateCurrentPathToQR(router.asPath));
               }}
             >
-                    Copy To Clipboard
+              Copy To Clipboard
             </Button>
 
             <Button
@@ -185,7 +204,7 @@ const DocumentDetails: NextPage = () => {
                 downloadQRCode(generateCurrentPathToQR(router.asPath));
               }}
             >
-                    Download
+              Download
             </Button>
           </div>
         </Modal>
