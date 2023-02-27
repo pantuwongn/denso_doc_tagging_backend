@@ -33,10 +33,18 @@ export const categoriesformToQueryParser = (
       if (skipKey?.includes(key)) continue;
       const element = values[key];
       const parsedId = parseInt(key.split(',')[0]);
-
+      
       //Use for combo box input
+      if(Array.isArray(element) && !element.length){
+        tempArry.push({
+          category_id: parsedId,
+          value: ""
+        });
+        continue;
+      }
+
       if (Array.isArray(element)) {
-        element.forEach((e) => {
+        element.forEach((e) => {          
           tempArry.push({
             category_id: parsedId,
             value: e,

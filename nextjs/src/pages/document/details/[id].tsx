@@ -84,7 +84,8 @@ const DocumentDetails: NextPage = () => {
               height={100}
               alt="document-icon"
             />
-            <h1>{fetchedDocs?.name}</h1>
+            {/* use it only in here sorry about dirty code :P */}
+            <h1>{`${fetchedDocs?.name}.${fetchedDocs?.path.split(".")[fetchedDocs.path.split(".").length - 1]}`}</h1>
             <Button
               type="default"
               icon={<DownloadOutlined />}
@@ -144,7 +145,7 @@ const DocumentDetails: NextPage = () => {
           <link rel="icon" href="/favicon.ico" />
         </Head>
       </div>
-      <Container title="Document Details" backable>
+      <Container title="Document Details" backRoute="/document" backable>
         <Modal
           title="QR Code"
           open={isQRModalOpen}

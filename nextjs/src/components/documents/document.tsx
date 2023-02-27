@@ -6,7 +6,7 @@ import {
   DownloadOutlined,
   FolderOpenOutlined,
 } from "@ant-design/icons";
-import { Button, Space } from "antd";
+import { Button, Space, Tooltip } from "antd";
 
 interface IProps {
   id: string;
@@ -36,31 +36,39 @@ export default function DocumentItem({
         <h1>{name}</h1>
       </Space>
       <Space>
-        <Button
-          icon={<FolderOpenOutlined />}
-          onClick={() => {
-            onOpenClick(path);
-          }}
-        />
+        <Tooltip title="View PDF">
+          <Button
+            icon={<FolderOpenOutlined />}
+            onClick={() => {
+              onOpenClick(path);
+            }}
+          />
+        </Tooltip>
 
-        <Button
-          icon={<FileSearchOutlined />}
-          onClick={() => {
-            onDetailClick(id);
-          }}
-        />
-        <Button
-          icon={<EditOutlined />}
-          onClick={() => {
-            onEditClick(id);
-          }}
-        />
-        <Button
-          icon={<DownloadOutlined />}
-          onClick={() => {
-            onDownloadClick(path);
-          }}
-        />
+        <Tooltip title="Document Details">
+          <Button
+            icon={<FileSearchOutlined />}
+            onClick={() => {
+              onDetailClick(id);
+            }}
+          />
+        </Tooltip>
+        <Tooltip title="Edit Document">
+          <Button
+            icon={<EditOutlined />}
+            onClick={() => {
+              onEditClick(id);
+            }}
+          />
+        </Tooltip>
+        <Tooltip title="Download">
+          <Button
+            icon={<DownloadOutlined />}
+            onClick={() => {
+              onDownloadClick(path);
+            }}
+          />
+        </Tooltip>
       </Space>
     </div>
   );

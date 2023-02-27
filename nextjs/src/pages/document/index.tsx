@@ -53,7 +53,13 @@ const DocumentPage: NextPage = () => {
   const [searchedDoc, setSearchedDoc] = useState<IQueryDoc | undefined>(
     undefined
   );
-  const [dynamicForm, setDynamicForm] = useState<IDynamicForm>({});
+  const [dynamicForm, setDynamicForm] = useState<IDynamicForm>({
+    1 : {
+      value: [],
+      required: false,
+      isSingle: true
+    }
+  });
 
   const [isQRModalOpen, setIsQRModalOpen] = useState<boolean>(false);
 
@@ -97,7 +103,9 @@ const DocumentPage: NextPage = () => {
       for (const key in router.query) {
         if (Object.prototype.hasOwnProperty.call(router.query, key)) {
           let parsedKey = parseInt(key);
-          let param = (router.query[key] as string).split(",");
+          let queryParam = router.query[key] as string
+
+          let param = queryParam === "" ? [] : queryParam.split(",");
           let newElement = {
             [parsedKey]: { value: param, required: false, isSingle: parsedKey === SINGLE_VALUE_KEY },
           };
@@ -106,18 +114,7 @@ const DocumentPage: NextPage = () => {
       }
       setDynamicForm(tempElement);
 
-      //To reset default first field initialValue
       if (tempElement[1]) mainForm.setFieldValue("1", tempElement[1].value);
-
-      // for (const key in tempElement) {
-      //   if (Object.prototype.hasOwnProperty.call(tempElement, key)) {
-      //     const element = tempElement[key];
-      //     console.log("Key ", key);
-      //     console.log("Value ", element);
-
-      //     mainForm.setFieldValue(key.toString(), element);
-      //   }
-      // }
 
       let queryPayload = dynamicFormToSearchParser(tempElement);
       let data = await queryDoc(queryPayload);
@@ -214,10 +211,11 @@ const DocumentPage: NextPage = () => {
 
     try {
       let redirectURL = await handleDecodeQR(file);
+      setIsQRModalOpen(false);
       await router.push(redirectURL);
       //Not necessary just want it to sync style with webcam scan
       //To do hacky webcam disable
-      router.reload();
+      // router.reload();
     } catch (error) {
       message.error("QR Scan Error ");
     }
@@ -292,7 +290,7 @@ const DocumentPage: NextPage = () => {
               }}
             />
           </Tooltip>
-          <Tooltip title="search">
+          <Tooltip title="Search">
             <Button
               shape="circle"
               icon={<SearchOutlined />}
@@ -345,9 +343,8 @@ const DocumentPage: NextPage = () => {
               if (!!result) {
                 setQRScanResult(result?.getText());
                 console.log("QR Result: ", result?.getText());
+                setIsQRModalOpen(false);
                 await router.push(result.getText());
-                //Hacky disable webcam
-                router.reload();
               }
 
               if (!!error) {
@@ -356,14 +353,6 @@ const DocumentPage: NextPage = () => {
             }}
             constraints={{ facingMode: "environment" }}
           />
-          {/* {qrImageSrc && <img src={qrImageSrc} alt="QR code" />} */}
-
-          {/* If redirect is ok will remove these */}
-          {/* {qrScanResult !== "" && (
-            <Link href={qrScanResult}>
-              <Button>Go To QR Path!</Button>
-            </Link>
-          )} */}
         </Modal>
 
         <HorizontalSplitLayout

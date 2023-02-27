@@ -36,7 +36,13 @@ const DocumentQRPage: NextPage = () => {
   const [mainForm] = Form.useForm();
   const router = useRouter();
 
-  const [dynamicForm, setDynamicForm] = useState<IDynamicForm>({});
+  const [dynamicForm, setDynamicForm] = useState<IDynamicForm>({
+    1 : {
+      value: [],
+      required: false,
+      isSingle: true
+    }
+  });
 
   const { data: fetchedCategories } = useSWR("/get_category_list", () =>
     getCategories()
