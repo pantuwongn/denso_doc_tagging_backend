@@ -20,4 +20,4 @@
 3. Run docker
 ```docker-compose up -d```
 If you need to see the log, can be done by
-```docker-compose logs -f```
+```docker-compose logs -f```"# DocumentTagging" 
